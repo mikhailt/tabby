@@ -16,20 +16,21 @@ func buffer_changed(buf *gtk.GtkTextBuffer) {
 	fmt.Printf("changed\n")
 }
 
+var delete_instance_tag = false
 
 func highlight_instances(buf *gtk.GtkTextBuffer) {
-	var be, en gtk.GtkTextIter
 	var start, end gtk.GtkTextIter
 
 	buf.GetStartIter(&start)
-	buf.GetEndIter(&end)
+  buf.GetEndIter(&end)
 
-	buf.RemoveTagByName("global_font", &start, &end)
-	buf.ApplyTagByName("global_font", &start, &end)
-	buf.RemoveTagByName("instance", &start, &end)
+  if (delete_instance_tag) {
+		buf.RemoveTagByName("instance", &start, &end)
+    delete_instance_tag = false
+  }
 
 	if buf.GetHasSelection() {
-		fmt.Printf("beep\n")
+  	var be, en gtk.GtkTextIter
 		buf.GetIterAtMark(&be, buf.GetMark("selection_bound"))
 		buf.GetIterAtMark(&en, buf.GetMark("insert"))
 		selection := buf.GetSlice(&be, &en, false)
@@ -38,6 +39,7 @@ func highlight_instances(buf *gtk.GtkTextBuffer) {
 			return
 		}
 
+		delete_instance_tag = true
 		text := buf.GetSlice(&start, &end, false)
 		shift := 0
 		for be_ind := 0; ; {
@@ -115,6 +117,7 @@ func main() {
 	swin.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
 	swin.SetShadowType(gtk.GTK_SHADOW_IN)
 	textview := gtk.TextView()
+  textview.ModifyFontEasy("Monospace Regular 10")
 	var start, end gtk.GtkTextIter
 	buffer := textview.GetBuffer()
 
