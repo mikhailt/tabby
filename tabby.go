@@ -22,20 +22,20 @@ func highlight_instances(buf *gtk.GtkTextBuffer) {
 	var start, end gtk.GtkTextIter
 
 	buf.GetStartIter(&start)
-  buf.GetEndIter(&end)
+	buf.GetEndIter(&end)
 
-  if (delete_instance_tag) {
+	if delete_instance_tag {
 		buf.RemoveTagByName("instance", &start, &end)
-    delete_instance_tag = false
-  }
+		delete_instance_tag = false
+	}
 
 	if buf.GetHasSelection() {
-  	var be, en gtk.GtkTextIter
+		var be, en gtk.GtkTextIter
 		buf.GetIterAtMark(&be, buf.GetMark("selection_bound"))
 		buf.GetIterAtMark(&en, buf.GetMark("insert"))
 		selection := buf.GetSlice(&be, &en, false)
 		sel_len := len(selection)
-		if (20 < sel_len) || (2 > sel_len ) {
+		if (20 < sel_len) || (2 > sel_len) {
 			return
 		}
 
@@ -117,7 +117,7 @@ func main() {
 	swin.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
 	swin.SetShadowType(gtk.GTK_SHADOW_IN)
 	textview := gtk.TextView()
-  textview.ModifyFontEasy("Monospace Regular 10")
+	textview.ModifyFontEasy("Monospace Regular 10")
 	var start, end gtk.GtkTextIter
 	buffer := textview.GetBuffer()
 
