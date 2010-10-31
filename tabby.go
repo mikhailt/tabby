@@ -8,15 +8,45 @@ import (
 	"fmt"
 	//"reflect"
 	"strings"
-	//"runtime"
+	"sync"
 	//"unsafe"
+  "time"
+  "runtime"
 )
 
-func buffer_changed(buf *gtk.GtkTextBuffer) {
-	fmt.Printf("changed\n")
+var ncpu int
+
+func min(a, b int) int {
+  if (a < b) {
+    return a
+  }
+  return b
 }
 
-var delete_instance_tag = false
+func search(ch chan int, mu *sync.Mutex, buf *gtk.GtkTextBuffer, text string,
+            shift int, selection string, sel_len int) {
+  var be, en gtk.GtkTextIter
+
+  for be_ind := 0; ; {
+    be_ind = strings.Index(text, selection)
+    if -1 == be_ind {
+      ch <- 0
+      break
+    }
+    shift += be_ind
+    text = text[be_ind + sel_len :]
+
+    mu.Lock()
+    buf.GetIterAtOffset(&be, shift)
+    buf.GetIterAtOffset(&en, shift+sel_len)
+    buf.ApplyTagByName("instance", &be, &en)
+    mu.Unlock()
+
+    shift += sel_len
+  }
+}
+
+var prev_selection string
 
 func highlight_instances(buf *gtk.GtkTextBuffer) {
 	var start, end gtk.GtkTextIter
@@ -24,48 +54,75 @@ func highlight_instances(buf *gtk.GtkTextBuffer) {
 	buf.GetStartIter(&start)
 	buf.GetEndIter(&end)
 
-	if delete_instance_tag {
-		buf.RemoveTagByName("instance", &start, &end)
-		delete_instance_tag = false
-	}
-
 	if buf.GetHasSelection() {
 		var be, en gtk.GtkTextIter
-		buf.GetIterAtMark(&be, buf.GetMark("selection_bound"))
-		buf.GetIterAtMark(&en, buf.GetMark("insert"))
+    buf.GetSelectionBounds(&be, &en)
 		selection := buf.GetSlice(&be, &en, false)
-		sel_len := len(selection)
-		if (20 < sel_len) || (2 > sel_len) {
-			return
-		}
-
-		delete_instance_tag = true
-		text := buf.GetSlice(&start, &end, false)
-		shift := 0
-		for be_ind := 0; ; {
-			be_ind = strings.Index(text, selection)
-			if -1 == be_ind {
-				break
+    if prev_selection != selection {
+      sel_len := len(selection)
+      if (20 < sel_len) || (2 > sel_len) {
+				return
 			}
-			shift += be_ind
-			buf.GetIterAtOffset(&be, shift)
-			buf.GetIterAtOffset(&en, shift+sel_len)
-			buf.ApplyTagByName("instance", &be, &en)
-			text = text[be_ind+sel_len:]
-			shift += sel_len
-		}
-	}
+
+      time_start := time.Nanoseconds()
+
+    	buf.RemoveTagByName("instance", &start, &end)
+    	prev_selection = selection
+			fmt.Printf("selection = %s\n", selection)
+
+			text := buf.GetSlice(&start, &end, false)
+			text_len := len(text)
+			if (text_len < 10000000) {
+        shift := 0
+        for be_ind := 0; ; {
+          be_ind = strings.Index(text, selection)
+          if -1 == be_ind {
+            break
+          }
+          shift += be_ind
+          buf.GetIterAtOffset(&be, shift)
+          buf.GetIterAtOffset(&en, shift+sel_len)
+          buf.ApplyTagByName("instance", &be, &en)
+          text = text[be_ind+sel_len:]
+          shift += sel_len
+        }
+			} else {
+        ch := make(chan int)
+			  var mu sync.Mutex
+			  cores_left := ncpu - 2
+			  q := text_len / (ncpu - cores_left)
+        for y := 0; y < (ncpu - cores_left); y++ {
+          go search(ch, &mu, buf, text[y * q : min((y + 1)*q + 30, text_len)], y * q, selection, sel_len)
+        }
+        for cnt := (ncpu - cores_left); cnt > 0; {
+          _ = <- ch
+          cnt--
+          fmt.Printf("cnt--\n");
+        }
+			}
+
+			time_end := time.Nanoseconds()
+			total_time := time_end - time_start
+			fmt.Printf("elapsed time = %d.%d ms\n", total_time / 1000000, total_time % 1000000)
+
+    }
+	} else {
+		if prev_selection != "" {
+			prev_selection = ""
+      buf.RemoveTagByName("instance", &start, &end)
+    }
+  }
 }
 
 func main() {
+  ncpu = runtime.GOMAXPROCS(0)
 	gtk.Init(nil)
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
 	window.SetTitle("tabby")
 	window.Connect("destroy", func(w *gtk.GtkWidget, user_data string) {
-		println("got destroy!", user_data)
 		gtk.MainQuit()
 	},
-		"foo")
+		"")
 
 	//--------------------------------------------------------
 	// GtkVBox
@@ -92,11 +149,6 @@ func main() {
 	},
 		nil)
 	filesubmenu.Append(exitmenuitem)
-
-	filemenu = gtk.MenuItemWithMnemonic("_Help")
-	menubar.Append(filemenu)
-	filesubmenu = gtk.Menu()
-	filemenu.SetSubmenu(filesubmenu)
 
 	//--------------------------------------------------------
 	// GtkVPaned
@@ -125,10 +177,7 @@ func main() {
 		highlight_instances(buffer)
 	},
 		nil)
-	buffer.Connect("changed", func() {
-		buffer_changed(buffer)
-	},
-		nil)
+
 	buffer.GetStartIter(&start)
 	buffer.Insert(&start, "Hello\nSome more words\n#include \"iostream\"\nHello")
 	buffer.GetEndIter(&end)
@@ -143,7 +192,6 @@ func main() {
 	swin.Add(textview)
 	framebox.Add(swin)
 
-	// Event
 	window.Add(vbox)
 	window.SetSizeRequest(1280, 974)
 	window.ShowAll()
