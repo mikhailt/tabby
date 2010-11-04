@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language id="go" _name="Go" version="2.0" _section="Sources">
+    <styles>
+      <style id="comment" _name="Comment" map-to="def:comment"/>
+      <style id="string" _name="String" map-to="def:string"/>
+      <style id="escaped-character" _name="Escaped Character" map-to="def:special-char"/>
+      <style id="preprocessor" _name="Preprocessor" map-to="def:preprocessor"/>
+      <style id="included-file" _name="Included File" map-to="def:string"/>
+      <style id="char" _name="Character" map-to="def:character"/>
+      <style id="keyword" _name="Keyword" map-to="def:keyword"/>
+      <style id="type" _name="Data Type" map-to="def:keyword"/>
+      <style id="special" _name="Special" map-to="def:special-char"/>
+    </styles>
+    <definitions>
+        <context id="go">
+            <include>
+
+                <context id="comment" style-ref="comment">
+                    <start>\/\/</start>
+                    <end>$</end>
+                </context>
+
+                <context id="string" end-at-line-end="true"
+                        style-ref="string">
+                    <start>"</start>
+                    <end>"</end>
+                    <include>
+                        <context id="escaped-character" style-ref="escaped-character">
+                            <match>\\.</match>
+                        </context>
+                    </include>
+                </context>
+
+                <context id="comment-multiline"
+                            style-ref="comment">
+                    <start>\/\*</start>
+                    <end>\*\/</end>
+                    <include>
+                        <context ref="def:in-comment"/>
+                    </include>
+                </context>
+
+                <context id="char" end-at-line-end="true" style-ref="char">
+                    <start>'</start>
+                    <end>'</end>
+                    <include>
+                        <context ref="escaped-character"/>
+                    </include>
+                </context>
+
+                <context ref="def:decimal"/>
+                <context ref="def:float"/>
+
+                <context id="keywords" style-ref="keyword">
+                    <keyword>break</keyword>
+                    <keyword>case</keyword>
+                    <keyword>chan</keyword>
+                    <keyword>const</keyword>
+                    <keyword>continue</keyword>
+                    <keyword>default</keyword>
+                    <keyword>defer</keyword>
+                    <keyword>else</keyword>
+                    <keyword>fallthrough</keyword>
+                    <keyword>for</keyword>
+                    <keyword>func</keyword>
+                    <keyword>fo</keyword>
+                    <keyword>goto</keyword>
+                    <keyword>if</keyword>
+                    <keyword>import</keyword>
+                    <keyword>interface</keyword>
+                    <keyword>map</keyword>
+                    <keyword>make</keyword>
+                    <keyword>package</keyword>
+                    <keyword>range</keyword>
+                    <keyword>return</keyword>
+                    <keyword>select</keyword>
+                    <keyword>type</keyword>
+                    <keyword>switch</keyword>
+                    <keyword>type</keyword>
+                    <keyword>var</keyword>
+
+                    <keyword>append</keyword>
+                    <keyword>cap</keyword>
+                    <keyword>close</keyword>
+                    <keyword>closed</keyword>
+                    <keyword>cmplx</keyword>
+                    <keyword>copy</keyword>
+                    <keyword>imag</keyword>
+                    <keyword>len</keyword>
+                    <keyword>make</keyword>
+                    <keyword>new</keyword>
+                    <keyword>panic</keyword>
+                    <keyword>print</keyword>
+                    <keyword>println</keyword>
+                    <keyword>real</keyword>
+                    <keyword>recover</keyword>
+
+                    <keyword>nil</keyword>
+                    <keyword>true</keyword>
+                    <keyword>false</keyword>
+                    <keyword>iota</keyword>
+                </context>
+
+                <context id="types" style-ref="type">
+                    <keyword>uint</keyword>
+                    <keyword>int</keyword>
+                    <keyword>float</keyword>
+                    <keyword>complex</keyword>
+                    <keyword>uintptr</keyword>
+
+                    <keyword>byte</keyword>
+                    <keyword>uint8</keyword>
+                    <keyword>uint16</keyword>
+                    <keyword>uint32</keyword>
+                    <keyword>uint64</keyword>
+
+                    <keyword>int8</keyword>
+                    <keyword>int16</keyword>
+                    <keyword>int32</keyword>
+                    <keyword>int64</keyword>
+
+                    <keyword>float32</keyword>
+                    <keyword>float64</keyword>
+                    <keyword>complex64</keyword>
+                    <keyword>complex128</keyword>
+
+
+                    <keyword>struct</keyword>
+                    <keyword>string</keyword>
+
+                </context>
+                <context id="specials" style-ref="special">
+                    <match>[\!\@\#\$\%\^\*\(\)\+\=\-\[\]\{\}\:\;\/\.\,]</match>
+                </context>
+
+            </include>
+        </context>
+    </definitions>
+</language>
