@@ -1,32 +1,30 @@
 package main
 
 import (
-	//"os"
-	"gtk"
-	//"gdkpixbuf"
-	//"path"
+	"os"
 	"fmt"
-	//"reflect"
-	//"strings"
-	//"sync"
-	//"unsafe"
-	//"time"
-	//"runtime"
-	"strconv"
+	"gtk"
+	"gdk"
 	"gdkpixbuf"
 )
 
-var lang_man *gtk.GtkSourceLanguageManager
+var main_window *gtk.GtkWindow
 var source_buf *gtk.GtkSourceBuffer
 var source_view *gtk.GtkSourceView
 var selection_flag bool
-
-
 var prev_selection string
+var prev_dir string
+var cur_file string
 
 func highlight_instances() {
 	var cur gtk.GtkTextIter
 	var be, en gtk.GtkTextIter
+
+	if source_buf.GetModified() {
+		main_window.SetTitle("* " + cur_file)
+	} else {
+		main_window.SetTitle(cur_file)
+	}
 
 	source_buf.GetSelectionBounds(&be, &en)
 	selection := source_buf.GetSlice(&be, &en, false)
@@ -55,16 +53,103 @@ func highlight_instances() {
 	}
 }
 
-func main() {
-	gtk.Init(nil)
-	main_window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
-	main_window.SetSizeRequest(1024, 800)
-	main_window.SetTitle("tabby")
-	main_window.Connect("destroy",
-		func(w *gtk.GtkWidget, user_data string) { gtk.MainQuit() },
-		"")
+func bump_message(m string) {
+	dialog := gtk.MessageDialog(
+		main_window.GetTopLevelAsWindow(),
+		gtk.GTK_DIALOG_MODAL,
+		gtk.GTK_MESSAGE_INFO,
+		gtk.GTK_BUTTONS_OK,
+		m)
+	dialog.Run()
+	dialog.Destroy()
+}
 
-	lang_man = gtk.GtkSourceLanguageManagerGetDefault()
+func open_cb() {
+	file_dialog := gtk.FileChooserDialog2("", source_view.GetTopLevelAsWindow(),
+		gtk.GTK_FILE_CHOOSER_ACTION_OPEN,
+		gtk.GTK_STOCK_CANCEL, gtk.GTK_RESPONSE_CANCEL,
+		gtk.GTK_STOCK_OPEN, gtk.GTK_RESPONSE_ACCEPT)
+	file_dialog.SetCurrentFolder(prev_dir)
+	res := file_dialog.Run()
+	dialog_folder := file_dialog.GetCurrentFolder()
+	dialog_file := file_dialog.GetFilename()
+	file_dialog.Destroy()
+	if gtk.GTK_RESPONSE_ACCEPT == res {
+		prev_dir = dialog_folder
+		file, _ := os.Open(dialog_file, os.O_RDONLY, 0700)
+		if nil == file {
+			bump_message("Unable to open file for reading: " + dialog_file)
+			return
+		}
+		stat, _ := file.Stat()
+		if nil == stat {
+			bump_message("Unable to stat file: " + dialog_file)
+			file.Close()
+			return
+		}
+		buf := make([]byte, stat.Size)
+		nread, _ := file.Read(buf)
+		if nread != int(stat.Size) {
+			bump_message("Unable to read whole file: " + dialog_file)
+			file.Close()
+			return
+		}
+		source_buf.SetText(string(buf))
+		file.Close()
+		cur_file = dialog_file
+		source_buf.SetModified(false)
+	}
+}
+
+func save_cb() {
+	if "" == cur_file {
+		save_as_cb()
+	} else {
+		file, _ := os.Open(cur_file, os.O_CREAT|os.O_WRONLY, 0700)
+		if nil == file {
+			// To be replaced with dialog.
+			bump_message("Unable to open file for writing: " + cur_file)
+			return
+		}
+		var be, en gtk.GtkTextIter
+		source_buf.GetStartIter(&be)
+		source_buf.GetEndIter(&en)
+		text_to_save := source_buf.GetText(&be, &en, true)
+		nbytes, _ := file.WriteString(text_to_save)
+		if nbytes != len(text_to_save) {
+			bump_message("Error while writing to file: " + cur_file)
+			return
+		}
+		source_buf.SetModified(false)
+		file.Close()
+		main_window.SetTitle(cur_file)
+	}
+}
+
+func save_as_cb() {
+	file_dialog := gtk.FileChooserDialog2("", source_view.GetTopLevelAsWindow(),
+		gtk.GTK_FILE_CHOOSER_ACTION_SAVE,
+		gtk.GTK_STOCK_CANCEL, gtk.GTK_RESPONSE_CANCEL,
+		gtk.GTK_STOCK_SAVE, gtk.GTK_RESPONSE_ACCEPT)
+	file_dialog.SetCurrentFolder(prev_dir)
+	res := file_dialog.Run()
+	dialog_folder := file_dialog.GetCurrentFolder()
+	dialog_file := file_dialog.GetFilename()
+	file_dialog.Destroy()
+	if gtk.GTK_RESPONSE_ACCEPT == res {
+		prev_dir = dialog_folder
+		cur_file = dialog_file
+		save_cb()
+	}
+}
+
+func exit_cb() {
+	// Are-you-sure-you-want-to-exit-because-file-is-unsaved logic will be here
+	gtk.MainQuit()
+}
+
+func init_widgets() {
+	lang_man := gtk.GtkSourceLanguageManagerGetDefault()
 	lang := lang_man.GetLanguage("go")
 	if nil == lang.SourceLanguage {
 		fmt.Printf("warning: no language specification\n")
@@ -73,6 +158,16 @@ func main() {
 	source_buf.SetLanguage(lang)
 	source_buf.Connect("mark-set", func() { highlight_instances() }, nil)
 	source_buf.CreateTag("instance", map[string]string{"background": "#CCCC99"})
+
+	store := gtk.TreeStore(gdkpixbuf.GetGdkPixbufType(), gtk.TYPE_STRING)
+	treeview := gtk.TreeView()
+	treeview.ModifyFontEasy("Regular 8")
+	treeview.SetModel(store.ToTreeModel())
+	treeview.AppendColumn(gtk.TreeViewColumnWithAttributes(
+		"", gtk.CellRendererPixbuf(), "pixbuf", 0))
+	treeview.AppendColumn(gtk.TreeViewColumnWithAttributes(
+		"", gtk.CellRendererText(), "text", 1))
+	treeview.SetHeadersVisible(false)
 
 	source_view = gtk.GtkSourceViewNewWithBuffer(source_buf)
 	source_view.ModifyFontEasy("Monospace Regular 10")
@@ -87,27 +182,8 @@ func main() {
 	source_view.SetTabWidth(2)
 	source_view.SetSmartHomeEnd(gtk.GTK_SOURCE_SMART_HOME_END_ALWAYS)
 
-	store := gtk.TreeStore(gdkpixbuf.GetGdkPixbufType(), gtk.TYPE_STRING)
-	treeview := gtk.TreeView()
-	treeview.ModifyFontEasy("Regular 8")
-	treeview.SetModel(store.ToTreeModel())
-	treeview.AppendColumn(gtk.TreeViewColumnWithAttributes("", gtk.CellRendererPixbuf(), "pixbuf", 0))
-	treeview.AppendColumn(gtk.TreeViewColumnWithAttributes("", gtk.CellRendererText(), "text", 1))
-	treeview.SetHeadersVisible(false)
-
-	for n := 1; n <= 10; n++ {
-		var iter1, iter2, iter3 gtk.GtkTreeIter
-		store.Append(&iter1, nil)
-		store.Set(&iter1, gtk.Image().RenderIcon(gtk.GTK_STOCK_DIRECTORY, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf, "Folder"+strconv.Itoa(n))
-		store.Append(&iter2, &iter1)
-		store.Set(&iter2, gtk.Image().RenderIcon(gtk.GTK_STOCK_DIRECTORY, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf, "SubFolder"+strconv.Itoa(n))
-		store.Append(&iter3, &iter2)
-		store.Set(&iter3, gtk.Image().RenderIcon(gtk.GTK_STOCK_FILE, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf, "File"+strconv.Itoa(n))
-	}
-
 	vbox := gtk.VBox(false, 0)
 	hpaned := gtk.HPaned()
-	main_window.Add(vbox)
 
 	menubar := gtk.MenuBar()
 	vbox.PackStart(menubar, false, false, 0)
@@ -118,9 +194,29 @@ func main() {
 	file_submenu := gtk.Menu()
 	file_item.SetSubmenu(file_submenu)
 
+	accel_group := gtk.AccelGroupNew()
+
+	open_item := gtk.MenuItemWithMnemonic("_Open")
+	file_submenu.Append(open_item)
+	open_item.Connect("activate", open_cb, nil)
+	open_item.AddAccelerator("activate", accel_group, gdk.GDK_o,
+		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
+
+	save_item := gtk.MenuItemWithMnemonic("_Save")
+	file_submenu.Append(save_item)
+	save_item.Connect("activate", save_cb, nil)
+	save_item.AddAccelerator("activate", accel_group, gdk.GDK_s,
+		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
+
+	save_as_item := gtk.MenuItemWithMnemonic("Save _as")
+	file_submenu.Append(save_as_item)
+	save_as_item.Connect("activate", save_as_cb, nil)
+	save_as_item.AddAccelerator("activate", accel_group, gdk.GDK_a,
+		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
+
 	exit_item := gtk.MenuItemWithMnemonic("E_xit")
 	file_submenu.Append(exit_item)
-	exit_item.Connect("activate", func() { gtk.MainQuit() }, nil)
+	exit_item.Connect("activate", exit_cb, nil)
 
 	tree_window := gtk.ScrolledWindow(nil, nil)
 	tree_window.SetSizeRequest(300, 0)
@@ -133,6 +229,19 @@ func main() {
 	hpaned.Add2(text_window)
 	text_window.Add(source_view)
 
+	main_window = gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
+	main_window.Maximize()
+	main_window.SetTitle("tabby")
+	main_window.Connect("destroy", exit_cb, "")
+	main_window.Add(vbox)
 	main_window.ShowAll()
+	main_window.AddAccelGroup(accel_group)
+
+	source_view.GrabFocus()
+}
+
+func main() {
+	gtk.Init(nil)
+	init_widgets()
 	gtk.Main()
 }

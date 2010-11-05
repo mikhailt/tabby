@@ -1,0 +1,2 @@
+gofmt tabby.go > tabby.go.fmt
+mv tabby.go.fmt tabby.go
