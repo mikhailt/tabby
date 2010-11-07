@@ -130,7 +130,7 @@
 
                 </context>
                 <context id="specials" style-ref="special">
-                    <match>[\!\@\#\$\%\^\*\(\)\+\=\-\[\]\{\}\:\;\/\.\,]</match>
+                    <match>[\!\@\#\$\%\^\*\(\)\+\=\-\[\]\{\}\:\;\/\.\,&lt;&gt;]</match>
                 </context>
 
             </include>

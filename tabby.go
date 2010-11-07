@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"fmt"
 	"gtk"
 	"gdk"
 	"gdkpixbuf"
@@ -16,7 +15,8 @@ var prev_selection string
 var prev_dir string
 var cur_file string
 
-func highlight_instances() {
+func mark_set_cb() {
+  //println("mark_set_cb called")
 	var cur gtk.GtkTextIter
 	var be, en gtk.GtkTextIter
 
@@ -94,10 +94,14 @@ func open_cb() {
 			file.Close()
 			return
 		}
+
 		source_buf.SetText(string(buf))
 		file.Close()
 		cur_file = dialog_file
+		source_buf.BeginNotUndoableAction()
+		source_buf.SetText(string(buf))
 		source_buf.SetModified(false)
+		source_buf.EndNotUndoableAction()
 	}
 }
 
@@ -121,6 +125,7 @@ func save_cb() {
 			return
 		}
 		source_buf.SetModified(false)
+		file.Truncate(int64(nbytes))
 		file.Close()
 		main_window.SetTitle(cur_file)
 	}
@@ -148,15 +153,34 @@ func exit_cb() {
 	gtk.MainQuit()
 }
 
+func close_cb() {
+  cur_file = ""
+  main_window.SetTitle("")
+  source_buf.BeginNotUndoableAction()
+  source_buf.SetText("")
+  source_buf.EndNotUndoableAction()
+}
+
+func paste_done_cb() {
+  //println("paste_done_cb")
+  var be, en gtk.GtkTextIter
+  source_buf.GetStartIter(&be)
+  source_buf.GetEndIter(&en)
+  source_buf.RemoveTagByName("instance", &be, &en)
+  selection_flag = false
+}
+
 func init_widgets() {
-	lang_man := gtk.GtkSourceLanguageManagerGetDefault()
+	lang_man := gtk.SourceLanguageManagerGetDefault()
 	lang := lang_man.GetLanguage("go")
 	if nil == lang.SourceLanguage {
-		fmt.Printf("warning: no language specification\n")
+		println("warning: no language specification")
 	}
-	source_buf = gtk.GtkSourceBufferNew()
+	source_buf = gtk.SourceBuffer()
 	source_buf.SetLanguage(lang)
-	source_buf.Connect("mark-set", func() { highlight_instances() }, nil)
+	source_buf.Connect("paste-done", paste_done_cb, nil)
+	source_buf.Connect("mark-set", mark_set_cb, nil)
+
 	source_buf.CreateTag("instance", map[string]string{"background": "#CCCC99"})
 
 	store := gtk.TreeStore(gdkpixbuf.GetGdkPixbufType(), gtk.TYPE_STRING)
@@ -169,7 +193,7 @@ func init_widgets() {
 		"", gtk.CellRendererText(), "text", 1))
 	treeview.SetHeadersVisible(false)
 
-	source_view = gtk.GtkSourceViewNewWithBuffer(source_buf)
+	source_view = gtk.SourceViewWithBuffer(source_buf)
 	source_view.ModifyFontEasy("Monospace Regular 10")
 	source_view.SetAutoIndent(true)
 	source_view.SetHighlightCurrentLine(true)
@@ -194,7 +218,7 @@ func init_widgets() {
 	file_submenu := gtk.Menu()
 	file_item.SetSubmenu(file_submenu)
 
-	accel_group := gtk.AccelGroupNew()
+	accel_group := gtk.AccelGroup()
 
 	open_item := gtk.MenuItemWithMnemonic("_Open")
 	file_submenu.Append(open_item)
@@ -211,8 +235,12 @@ func init_widgets() {
 	save_as_item := gtk.MenuItemWithMnemonic("Save _as")
 	file_submenu.Append(save_as_item)
 	save_as_item.Connect("activate", save_as_cb, nil)
-	save_as_item.AddAccelerator("activate", accel_group, gdk.GDK_a,
-		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
+
+  close_item := gtk.MenuItemWithMnemonic("_Close")
+  file_submenu.Append(close_item)
+  close_item.Connect("activate", close_cb, nil)
+  close_item.AddAccelerator("activate", accel_group, gdk.GDK_w,
+    gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
 
 	exit_item := gtk.MenuItemWithMnemonic("E_xit")
 	file_submenu.Append(exit_item)
