@@ -16,7 +16,7 @@ var prev_dir string
 var cur_file string
 
 func mark_set_cb() {
-  //println("mark_set_cb called")
+	//println("mark_set_cb called")
 	var cur gtk.GtkTextIter
 	var be, en gtk.GtkTextIter
 
@@ -154,20 +154,20 @@ func exit_cb() {
 }
 
 func close_cb() {
-  cur_file = ""
-  main_window.SetTitle("")
-  source_buf.BeginNotUndoableAction()
-  source_buf.SetText("")
-  source_buf.EndNotUndoableAction()
+	cur_file = ""
+	main_window.SetTitle("")
+	source_buf.BeginNotUndoableAction()
+	source_buf.SetText("")
+	source_buf.EndNotUndoableAction()
 }
 
 func paste_done_cb() {
-  //println("paste_done_cb")
-  var be, en gtk.GtkTextIter
-  source_buf.GetStartIter(&be)
-  source_buf.GetEndIter(&en)
-  source_buf.RemoveTagByName("instance", &be, &en)
-  selection_flag = false
+	//println("paste_done_cb")
+	var be, en gtk.GtkTextIter
+	source_buf.GetStartIter(&be)
+	source_buf.GetEndIter(&en)
+	source_buf.RemoveTagByName("instance", &be, &en)
+	selection_flag = false
 }
 
 func init_widgets() {
@@ -236,11 +236,11 @@ func init_widgets() {
 	file_submenu.Append(save_as_item)
 	save_as_item.Connect("activate", save_as_cb, nil)
 
-  close_item := gtk.MenuItemWithMnemonic("_Close")
-  file_submenu.Append(close_item)
-  close_item.Connect("activate", close_cb, nil)
-  close_item.AddAccelerator("activate", accel_group, gdk.GDK_w,
-    gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
+	close_item := gtk.MenuItemWithMnemonic("_Close")
+	file_submenu.Append(close_item)
+	close_item.Connect("activate", close_cb, nil)
+	close_item.AddAccelerator("activate", accel_group, gdk.GDK_w,
+		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
 
 	exit_item := gtk.MenuItemWithMnemonic("E_xit")
 	file_submenu.Append(exit_item)
