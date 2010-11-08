@@ -5,26 +5,60 @@ import (
 	"gtk"
 	"gdk"
 	"gdkpixbuf"
+	"glib"
 )
+
+type FileRecord struct {
+	name string
+	iter *gtk.GtkTreeIter
+}
+
+var file_map map[string]FileRecord
 
 var main_window *gtk.GtkWindow
 var source_buf *gtk.GtkSourceBuffer
+var tree_store *gtk.GtkTreeStore
 var source_view *gtk.GtkSourceView
 var selection_flag bool
 var prev_selection string
 var prev_dir string
 var cur_file string
 
-func mark_set_cb() {
-	//println("mark_set_cb called")
-	var cur gtk.GtkTextIter
-	var be, en gtk.GtkTextIter
+func delete_file_from_tree(name string) {
+	if name == "" {
+		return
+	}
+	file_rec, found := file_map[name]
+	if false == found {
+		return
+	}
+	if false == tree_store.IterIsValid(file_rec.iter) {
+		bump_message("delete_file_from_tree: iterator is not valid!")
+	}
+	tree_store.Remove(file_rec.iter)
+}
 
+func add_file_to_tree(name string) {
+	iter := new(gtk.GtkTreeIter)
+	tree_store.Append(iter, nil)
+	tree_store.Set(iter,
+		gtk.Image().RenderIcon(gtk.GTK_STOCK_FILE, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf,
+		name)
+	file_map[name] = FileRecord{name, iter}
+}
+
+func buf_changed_cb() {
 	if source_buf.GetModified() {
 		main_window.SetTitle("* " + cur_file)
 	} else {
 		main_window.SetTitle(cur_file)
 	}
+}
+
+func mark_set_cb() {
+	//println("mark_set_cb called")
+	var cur gtk.GtkTextIter
+	var be, en gtk.GtkTextIter
 
 	source_buf.GetSelectionBounds(&be, &en)
 	selection := source_buf.GetSlice(&be, &en, false)
@@ -94,14 +128,19 @@ func open_cb() {
 			file.Close()
 			return
 		}
-
-		source_buf.SetText(string(buf))
 		file.Close()
 		cur_file = dialog_file
+		if false == glib.Utf8Validate(buf, nread, nil) {
+			bump_message("File " + cur_file + " is not correct utf8 text")
+			close_cb()
+			return
+		}
 		source_buf.BeginNotUndoableAction()
 		source_buf.SetText(string(buf))
 		source_buf.SetModified(false)
 		source_buf.EndNotUndoableAction()
+
+		add_file_to_tree(cur_file)
 	}
 }
 
@@ -154,6 +193,7 @@ func exit_cb() {
 }
 
 func close_cb() {
+	delete_file_from_tree(cur_file)
 	cur_file = ""
 	main_window.SetTitle("")
 	source_buf.BeginNotUndoableAction()
@@ -180,13 +220,14 @@ func init_widgets() {
 	source_buf.SetLanguage(lang)
 	source_buf.Connect("paste-done", paste_done_cb, nil)
 	source_buf.Connect("mark-set", mark_set_cb, nil)
+	source_buf.Connect("changed", buf_changed_cb, nil)
 
 	source_buf.CreateTag("instance", map[string]string{"background": "#CCCC99"})
 
-	store := gtk.TreeStore(gdkpixbuf.GetGdkPixbufType(), gtk.TYPE_STRING)
+	tree_store = gtk.TreeStore(gdkpixbuf.GetGdkPixbufType(), gtk.TYPE_STRING)
 	treeview := gtk.TreeView()
 	treeview.ModifyFontEasy("Regular 8")
-	treeview.SetModel(store.ToTreeModel())
+	treeview.SetModel(tree_store.ToTreeModel())
 	treeview.AppendColumn(gtk.TreeViewColumnWithAttributes(
 		"", gtk.CellRendererPixbuf(), "pixbuf", 0))
 	treeview.AppendColumn(gtk.TreeViewColumnWithAttributes(
@@ -268,8 +309,13 @@ func init_widgets() {
 	source_view.GrabFocus()
 }
 
+func init_vars() {
+	file_map = make(map[string]FileRecord)
+}
+
 func main() {
 	gtk.Init(nil)
 	init_widgets()
+	init_vars()
 	gtk.Main()
 }
