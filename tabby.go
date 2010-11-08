@@ -17,7 +17,9 @@ var file_map map[string]FileRecord
 
 var main_window *gtk.GtkWindow
 var source_buf *gtk.GtkSourceBuffer
+var tree_view *gtk.GtkTreeView
 var tree_store *gtk.GtkTreeStore
+var tree_model *gtk.GtkTreeModel
 var source_view *gtk.GtkSourceView
 var selection_flag bool
 var prev_selection string
@@ -45,6 +47,11 @@ func add_file_to_tree(name string) {
 		gtk.Image().RenderIcon(gtk.GTK_STOCK_FILE, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf,
 		name)
 	file_map[name] = FileRecord{name, iter}
+
+  var val gtk.GValue
+	tree_model.GetIterFromString(iter, "0")
+  tree_model.GetValue(iter, 1, &val)
+  println(val.GetString())
 }
 
 func buf_changed_cb() {
@@ -210,6 +217,13 @@ func paste_done_cb() {
 	selection_flag = false
 }
 
+func tree_view_select_cb() {
+  var path *gtk.GtkTreePath;
+  var column *gtk.GtkTreeViewColumn;
+  tree_view.GetCursor(&path, &column);
+  println(path.String())
+}
+
 func init_widgets() {
 	lang_man := gtk.SourceLanguageManagerGetDefault()
 	lang := lang_man.GetLanguage("go")
@@ -225,14 +239,16 @@ func init_widgets() {
 	source_buf.CreateTag("instance", map[string]string{"background": "#CCCC99"})
 
 	tree_store = gtk.TreeStore(gdkpixbuf.GetGdkPixbufType(), gtk.TYPE_STRING)
-	treeview := gtk.TreeView()
-	treeview.ModifyFontEasy("Regular 8")
-	treeview.SetModel(tree_store.ToTreeModel())
-	treeview.AppendColumn(gtk.TreeViewColumnWithAttributes(
+	tree_view = gtk.TreeView()
+	tree_view.ModifyFontEasy("Regular 8")
+	tree_model = tree_store.ToTreeModel()
+	tree_view.SetModel(tree_model)
+	tree_view.AppendColumn(gtk.TreeViewColumnWithAttributes(
 		"", gtk.CellRendererPixbuf(), "pixbuf", 0))
-	treeview.AppendColumn(gtk.TreeViewColumnWithAttributes(
+	tree_view.AppendColumn(gtk.TreeViewColumnWithAttributes(
 		"", gtk.CellRendererText(), "text", 1))
-	treeview.SetHeadersVisible(false)
+	tree_view.SetHeadersVisible(false)
+	tree_view.Connect("cursor-changed", tree_view_select_cb, nil)
 
 	source_view = gtk.SourceViewWithBuffer(source_buf)
 	source_view.ModifyFontEasy("Monospace Regular 10")
@@ -291,7 +307,7 @@ func init_widgets() {
 	tree_window.SetSizeRequest(300, 0)
 	tree_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
 	hpaned.Add1(tree_window)
-	tree_window.Add(treeview)
+	tree_window.Add(tree_view)
 
 	text_window := gtk.ScrolledWindow(nil, nil)
 	text_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_ALWAYS)
