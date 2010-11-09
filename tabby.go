@@ -10,7 +10,6 @@ import (
 
 type FileRecord struct {
 	name string
-	iter *gtk.GtkTreeIter
 }
 
 var file_map map[string]FileRecord
@@ -26,32 +25,90 @@ var prev_selection string
 var prev_dir string
 var cur_file string
 
+func slashed_prefix(a string, b string) int {
+  println("a = " + a + ", b = " + b)
+  bar := len(a)
+  l := len(b)
+  if (l < bar) {
+    bar = l
+  }
+  println(bar)
+  last_slash := 0
+  for y := 0; y < bar; y++ {
+    if (a[y] != b[y]) {
+      break
+    }
+    if ('/' == a[y]) {
+      last_slash = y + 1
+    }
+  }
+  return last_slash
+}
+
 func delete_file_from_tree(name string) {
 	if name == "" {
 		return
 	}
-	file_rec, found := file_map[name]
+	_, found := file_map[name]
 	if false == found {
 		return
 	}
-	if false == tree_store.IterIsValid(file_rec.iter) {
-		bump_message("delete_file_from_tree: iterator is not valid!")
-	}
-	tree_store.Remove(file_rec.iter)
+	file_map[name] = FileRecord{""}, false
 }
 
 func add_file_to_tree(name string) {
-	iter := new(gtk.GtkTreeIter)
-	tree_store.Append(iter, nil)
-	tree_store.Set(iter,
+  /*var iter gtk.GtkTreeIter
+	tree_store.Append(&iter, nil)
+	tree_store.Set(&iter,
 		gtk.Image().RenderIcon(gtk.GTK_STOCK_FILE, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf,
 		name)
-	file_map[name] = FileRecord{name, iter}
+	file_map[name] = FileRecord{name}*/
 
-  var val gtk.GValue
-	tree_model.GetIterFromString(iter, "0")
-  tree_model.GetValue(iter, 1, &val)
-  println(val.GetString())
+  var pred_iter *gtk.GtkTreeIter
+  var iter gtk.GtkTreeIter
+  cur_name := name[:]
+  pred_iter = nil
+	continue_flag := tree_model.GetIterFirst(&iter)
+  for ; continue_flag; {
+    var val gtk.GValue
+    tree_model.GetValue(&iter, 1, &val)
+    cur_dir := val.GetString()
+    println("cur_dir = " + cur_dir)
+    pos := slashed_prefix(cur_name, cur_dir)
+    if (pos > 0) {
+      if (pos == len(cur_dir)) {
+        // Added file lies inside cur_dir.
+        cur_name = cur_name[pos:]
+        pred_iter = iter.Copy() // Dont forget to Free it after.
+        tree_model.IterChildren(&iter, pred_iter)
+        continue
+      } else {
+        // cur_name shares some slashed prefix with other file.
+        tree_store.Remove(&iter)
+        var dir_iter gtk.GtkTreeIter
+        tree_store.Append(&dir_iter, pred_iter)
+        tree_store.Set(&dir_iter,
+          gtk.Image().RenderIcon(gtk.GTK_STOCK_DIRECTORY, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf,
+          cur_dir[:pos])
+        tree_store.Append(&iter, &dir_iter)
+        tree_store.Set(&iter,
+          gtk.Image().RenderIcon(gtk.GTK_STOCK_FILE, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf,
+          cur_dir[pos:])
+        cur_name = cur_name[pos:]
+        pred_iter = &dir_iter
+        break
+      }
+    }
+    if (false == tree_model.IterNext(&iter)) {
+      break
+    }
+  }
+  
+  var cur_iter gtk.GtkTreeIter
+  tree_store.Append(&cur_iter, pred_iter)
+  tree_store.Set(&cur_iter, 
+    gtk.Image().RenderIcon(gtk.GTK_STOCK_FILE, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf,
+    cur_name)
 }
 
 func buf_changed_cb() {
