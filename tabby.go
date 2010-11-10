@@ -6,13 +6,33 @@ import (
 	"gdk"
 	"gdkpixbuf"
 	"glib"
+	"runtime"
 )
 
 type FileRecord struct {
-	name string
+  buf []byte
+  modified bool
 }
 
-var file_map map[string]FileRecord
+type FileTreeNode struct {
+  name string
+  parent *FileTreeNode
+  brother *FileTreeNode
+  child *FileTreeNode
+}
+
+func NewFileTreeNode() *FileTreeNode {
+  res := new(FileTreeNode)
+  res.parent = nil
+  res.brother = nil
+  res.child = nil
+  return res
+}
+
+var file_tree_root FileTreeNode
+
+var file_map map[string]*FileRecord
+
 
 var main_window *gtk.GtkWindow
 var source_buf *gtk.GtkSourceBuffer
@@ -25,90 +45,227 @@ var prev_selection string
 var prev_dir string
 var cur_file string
 
+func file_save_current() {
+  if ("" == cur_file) {
+    return
+  }
+  var be, en gtk.GtkTextIter
+  source_buf.GetStartIter(&be)
+	source_buf.GetEndIter(&en)
+	text_to_save := source_buf.GetText(&be, &en, true)
+	rec := file_map[cur_file]
+	rec.buf = ([]byte)(text_to_save[:])
+	rec.modified = source_buf.GetModified()
+  runtime.GC()
+}
+
+func file_switch_to(name string) {
+  rec := file_map[name]
+  source_buf.BeginNotUndoableAction()
+	source_buf.SetText(string(rec.buf))
+	source_buf.SetModified(rec.modified)
+	source_buf.EndNotUndoableAction()
+	cur_file = name
+}
+
+func is_dir_name(name string) bool {
+  return ('/' == name[len(name) - 1])
+}
+
+// In case pos == 0 node means last smaller than this node;
+// pos > 0 means that found node with common slashed prefix with name.
+func file_tree_find_among_children(root *FileTreeNode, 
+    name string) (node *FileTreeNode, position int, prev *FileTreeNode) {
+  var pos int
+  var cur_child, prev_child *FileTreeNode
+  var last_smaller_node *FileTreeNode
+  last_smaller_node = nil
+  if (nil == root.child) {
+    return nil, 0, nil
+  }
+  prev_child = nil
+  for cur_child = root.child; nil != cur_child; cur_child = cur_child.brother {
+    pos = slashed_prefix(cur_child.name, name)
+    if (pos > 0) {
+      return cur_child, pos, prev_child
+    }
+    if (cur_child.name < name) {
+      last_smaller_node = cur_child
+    }
+    prev_child = cur_child
+  }
+  return last_smaller_node, 0, nil
+}
+
+func file_tree_insert(root *FileTreeNode, name string) {
+  cur_child, pos, prev_child := file_tree_find_among_children(root, name)
+  if (nil == cur_child) {
+    // Inserting name in the beginning of the list of children of root.
+    saved_child := root.child
+    root.child = NewFileTreeNode()
+    root.child.name = name
+    root.child.brother = saved_child
+    root.child.parent = root
+    return
+  }
+  if (0 == pos) {
+    // There is no child with common slashed prefix with name.
+    saved_brother := cur_child.brother
+    cur_child.brother = NewFileTreeNode()
+    cur_child.brother.brother = saved_brother
+    cur_child.brother.parent = cur_child.parent
+    cur_child.brother.name = name
+    return
+  }
+  child_name_len := len(cur_child.name)
+  if (pos == child_name_len) {
+    // cur_child is the directory containing current name.
+    file_tree_insert(cur_child, name[child_name_len:])
+    return
+  }
+  // cur_child is directory or file with common prefix with name.
+  replacement := NewFileTreeNode()
+  replacement.parent = cur_child.parent
+  replacement.brother = cur_child.brother
+  if (nil != prev_child) {
+    prev_child.brother = replacement
+  } else {
+    root.child = replacement
+  }
+  replacement.name = name[:pos]
+  replacement.child = cur_child
+  cur_child.parent = replacement
+  cur_child.name = cur_child.name[pos:]
+  cur_child.brother = nil
+  file_tree_insert(replacement, name[pos:])
+  
+}
+
+// Dumps root subtree to tree_store at iter. Flag is false for dumping files and
+// true for directories.
+func file_tree_store_rec(root *FileTreeNode, iter *gtk.GtkTreeIter, flag bool) {
+  var child_iter gtk.GtkTreeIter
+  var gtk_icon string
+  for cur_child := root.child; nil != cur_child; cur_child = cur_child.brother {
+    if (flag != is_dir_name(cur_child.name)) {
+      continue
+    }
+    tree_store.Append(&child_iter, iter)
+    if ('/' == cur_child.name[len(cur_child.name) - 1]) {
+      gtk_icon = gtk.GTK_STOCK_DIRECTORY
+    } else {
+      gtk_icon = gtk.GTK_STOCK_FILE
+    }
+    tree_store.Set(&child_iter, 
+      gtk.Image().RenderIcon(gtk_icon, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf, 
+      cur_child.name);
+    file_tree_store_rec(cur_child, &child_iter, false)
+    file_tree_store_rec(cur_child, &child_iter, true)
+  }
+}
+
+func file_tree_store() {
+  tree_store.Clear()
+  file_tree_store_rec(&file_tree_root, nil, false)
+  file_tree_store_rec(&file_tree_root, nil, true)
+  tree_view.ExpandAll()
+}
+
+
 func slashed_prefix(a string, b string) int {
-  println("a = " + a + ", b = " + b)
   bar := len(a)
   l := len(b)
   if (l < bar) {
     bar = l
   }
-  println(bar)
   last_slash := 0
   for y := 0; y < bar; y++ {
     if (a[y] != b[y]) {
-      break
+      return last_slash
     }
     if ('/' == a[y]) {
       last_slash = y + 1
     }
   }
-  return last_slash
+  return bar
+}
+
+func file_tree_merge_parent_and_child(child *FileTreeNode) {
+  parent := child.parent
+  if (parent != &file_tree_root) {
+    grand_parent := parent.parent
+    new_name := parent.name + child.name
+    if is_dir_name(new_name) {
+      parent.child = child.child
+      parent.name = new_name 
+    } else {
+      file_tree_remove(grand_parent, parent.name, false)
+      file_tree_insert(grand_parent, new_name)
+    }
+  }
+}
+
+func file_tree_remove_node(cur *FileTreeNode, prev *FileTreeNode) {
+  if (nil != prev) {
+    prev.brother = cur.brother
+  } else {
+    cur.parent.child = cur.brother
+  }
+}
+
+func file_tree_remove(root *FileTreeNode, name string, merge_flag bool) {
+  cur_child, pos, prev_child := file_tree_find_among_children(root, name)
+  name_len := len(name)
+  if (pos < name_len) {
+    // name lies inside cur_child directory.
+    file_tree_remove(cur_child, name[pos:], true)
+    return
+  } else {
+    // name lies inside root directory.
+    if (nil == prev_child) && (nil == cur_child.brother) {
+      // Only one child in current dir. It means that root is file_tree_root.
+      file_tree_root.child = nil
+      return
+    }
+    file_tree_remove_node(cur_child, prev_child)
+    if (false == merge_flag) {
+      return
+    }
+    if (nil != prev_child) {
+      if (nil == cur_child.brother) && (prev_child == cur_child.parent.child) {
+        // There are only two children of root: prev & cur 
+        file_tree_merge_parent_and_child(prev_child)
+      } 
+    } else {
+      // prev_child == nil
+      if (nil == cur_child.brother.brother) {
+        // Only two children of root: cur and his brother
+        file_tree_merge_parent_and_child(cur_child.brother)
+      }
+    }
+    return 
+  } 
+  bump_message("file_tree_remove: unexpected case: name = " + name)
 }
 
 func delete_file_from_tree(name string) {
-	if name == "" {
-		return
-	}
-	_, found := file_map[name]
-	if false == found {
-		return
-	}
-	file_map[name] = FileRecord{""}, false
+  _, found := file_map[name]
+  if (false == found) {
+    return
+  }
+  file_tree_remove(&file_tree_root, name, true)
+  file_map[name] = nil, false
 }
 
-func add_file_to_tree(name string) {
-  /*var iter gtk.GtkTreeIter
-	tree_store.Append(&iter, nil)
-	tree_store.Set(&iter,
-		gtk.Image().RenderIcon(gtk.GTK_STOCK_FILE, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf,
-		name)
-	file_map[name] = FileRecord{name}*/
-
-  var pred_iter *gtk.GtkTreeIter
-  var iter gtk.GtkTreeIter
-  cur_name := name[:]
-  pred_iter = nil
-	continue_flag := tree_model.GetIterFirst(&iter)
-  for ; continue_flag; {
-    var val gtk.GValue
-    tree_model.GetValue(&iter, 1, &val)
-    cur_dir := val.GetString()
-    println("cur_dir = " + cur_dir)
-    pos := slashed_prefix(cur_name, cur_dir)
-    if (pos > 0) {
-      if (pos == len(cur_dir)) {
-        // Added file lies inside cur_dir.
-        cur_name = cur_name[pos:]
-        pred_iter = iter.Copy() // Dont forget to Free it after.
-        tree_model.IterChildren(&iter, pred_iter)
-        continue
-      } else {
-        // cur_name shares some slashed prefix with other file.
-        tree_store.Remove(&iter)
-        var dir_iter gtk.GtkTreeIter
-        tree_store.Append(&dir_iter, pred_iter)
-        tree_store.Set(&dir_iter,
-          gtk.Image().RenderIcon(gtk.GTK_STOCK_DIRECTORY, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf,
-          cur_dir[:pos])
-        tree_store.Append(&iter, &dir_iter)
-        tree_store.Set(&iter,
-          gtk.Image().RenderIcon(gtk.GTK_STOCK_FILE, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf,
-          cur_dir[pos:])
-        cur_name = cur_name[pos:]
-        pred_iter = &dir_iter
-        break
-      }
+func add_file_to_tree(name string, bump_flag bool) {
+  _, found := file_map[name]
+  if (found) {
+    if (bump_flag) {
+      bump_message("File " + name + " is already open")
     }
-    if (false == tree_model.IterNext(&iter)) {
-      break
-    }
+    return
   }
-  
-  var cur_iter gtk.GtkTreeIter
-  tree_store.Append(&cur_iter, pred_iter)
-  tree_store.Set(&cur_iter, 
-    gtk.Image().RenderIcon(gtk.GTK_STOCK_FILE, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf,
-    cur_name)
+  file_tree_insert(&file_tree_root, name)
 }
 
 func buf_changed_cb() {
@@ -120,7 +277,6 @@ func buf_changed_cb() {
 }
 
 func mark_set_cb() {
-	//println("mark_set_cb called")
 	var cur gtk.GtkTextIter
 	var be, en gtk.GtkTextIter
 
@@ -163,6 +319,7 @@ func bump_message(m string) {
 }
 
 func open_cb() {
+  file_save_current()
 	file_dialog := gtk.FileChooserDialog2("", source_view.GetTopLevelAsWindow(),
 		gtk.GTK_FILE_CHOOSER_ACTION_OPEN,
 		gtk.GTK_STOCK_CANCEL, gtk.GTK_RESPONSE_CANCEL,
@@ -199,12 +356,15 @@ func open_cb() {
 			close_cb()
 			return
 		}
+		
 		source_buf.BeginNotUndoableAction()
 		source_buf.SetText(string(buf))
 		source_buf.SetModified(false)
 		source_buf.EndNotUndoableAction()
 
-		add_file_to_tree(cur_file)
+		add_file_to_tree(cur_file, true)
+		file_map[cur_file] = new(FileRecord)
+		file_tree_store()
 	}
 }
 
@@ -214,7 +374,6 @@ func save_cb() {
 	} else {
 		file, _ := os.Open(cur_file, os.O_CREAT|os.O_WRONLY, 0700)
 		if nil == file {
-			// To be replaced with dialog.
 			bump_message("Unable to open file for writing: " + cur_file)
 			return
 		}
@@ -257,7 +416,11 @@ func exit_cb() {
 }
 
 func close_cb() {
+  if ("" == cur_file) {
+    return
+  }
 	delete_file_from_tree(cur_file)
+	file_tree_store()
 	cur_file = ""
 	main_window.SetTitle("")
 	source_buf.BeginNotUndoableAction()
@@ -266,7 +429,6 @@ func close_cb() {
 }
 
 func paste_done_cb() {
-	//println("paste_done_cb")
 	var be, en gtk.GtkTextIter
 	source_buf.GetStartIter(&be)
 	source_buf.GetEndIter(&en)
@@ -274,11 +436,31 @@ func paste_done_cb() {
 	selection_flag = false
 }
 
+func tree_view_path(iter *gtk.GtkTreeIter) string {
+  var ans string
+  ans = ""
+  for ; ; {
+    var val gtk.GValue
+    var next gtk.GtkTreeIter
+    tree_model.GetValue(iter, 1, &val)
+    ans = val.GetString() + ans
+    if (false == tree_model.IterParent(&next, iter)) {
+      break
+    }
+    iter = &next
+  }
+  return ans
+}
+
 func tree_view_select_cb() {
   var path *gtk.GtkTreePath;
   var column *gtk.GtkTreeViewColumn;
   tree_view.GetCursor(&path, &column);
-  println(path.String())
+  var iter gtk.GtkTreeIter
+  tree_model.GetIterFromString(&iter, path.String())
+  sel_file := tree_view_path(&iter)
+  file_save_current()
+  file_switch_to(sel_file)
 }
 
 func init_widgets() {
@@ -293,7 +475,7 @@ func init_widgets() {
 	source_buf.Connect("mark-set", mark_set_cb, nil)
 	source_buf.Connect("changed", buf_changed_cb, nil)
 
-	source_buf.CreateTag("instance", map[string]string{"background": "#CCCC99"})
+	source_buf.CreateTag("instance", map[string]string{"background": "#FF8080"})
 
 	tree_store = gtk.TreeStore(gdkpixbuf.GetGdkPixbufType(), gtk.TYPE_STRING)
 	tree_view = gtk.TreeView()
@@ -383,7 +565,8 @@ func init_widgets() {
 }
 
 func init_vars() {
-	file_map = make(map[string]FileRecord)
+	file_map = make(map[string]*FileRecord)
+  cur_file = ""
 }
 
 func main() {

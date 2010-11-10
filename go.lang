@@ -102,6 +102,7 @@
                 </context>
 
                 <context id="types" style-ref="type">
+                    <keyword>bool</keyword>
                     <keyword>uint</keyword>
                     <keyword>int</keyword>
                     <keyword>float</keyword>
