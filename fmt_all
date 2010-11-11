@@ -1,2 +1,8 @@
-gofmt tabby.go > tabby.go.fmt
-mv tabby.go.fmt tabby.go
+gofmt src/main.go > main.go
+gofmt src/menu_callback.go > menu_callback.go
+gofmt src/file_tree.go > file_tree.go
+gofmt src/file_record.go > file_record.go
+mv main.go ./src/main.go
+mv menu_callback.go ./src/menu_callback.go
+mv file_tree.go ./src/file_tree.go
+mv file_record.go ./src/file_record.go
