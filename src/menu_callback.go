@@ -8,10 +8,7 @@ import (
 
 func new_cb() {
 	file_save_current()
-	source_buf_set_content(nil)
-	cur_file = ""
-	source_buf.SetModified(true)
-	refresh_title()
+	file_switch_to("")
 }
 
 func open_cb() {
@@ -46,19 +43,18 @@ func open_cb() {
 			return
 		}
 		file.Close()
-		cur_file = dialog_file
 		if nread > 0 {
 			if false == glib.Utf8Validate(buf, nread, nil) {
-				bump_message("File " + cur_file + " is not correct utf8 text")
+				bump_message("File " + dialog_file + " is not correct utf8 text")
 				close_cb()
 				return
 			}
 		}
 
-		source_buf_set_content(buf)
-		add_file_record(cur_file, true)
-		file_tree_store()
-		refresh_title()
+		if add_file_record(dialog_file, buf, true) {
+			file_tree_store()
+			file_switch_to(dialog_file)
+		}
 	}
 }
 
@@ -71,19 +67,20 @@ func save_cb() {
 			bump_message("Unable to open file for writing: " + cur_file)
 			return
 		}
-		var be, en gtk.GtkTextIter
-		source_buf.GetStartIter(&be)
-		source_buf.GetEndIter(&en)
-		text_to_save := source_buf.GetText(&be, &en, true)
-		nbytes, _ := file.WriteString(text_to_save)
-		if nbytes != len(text_to_save) {
+		file_save_current()
+		rec, _ := file_map[cur_file]
+		println(rec.buf)
+		nbytes, _ := file.WriteString(string(rec.buf))
+		if nbytes != len(rec.buf) {
 			bump_message("Error while writing to file: " + cur_file)
 			return
 		}
-		source_buf.SetModified(false)
 		file.Truncate(int64(nbytes))
 		file.Close()
+
+		source_buf.SetModified(false)
 		refresh_title()
+		println(cur_file + "saved")
 	}
 }
 
@@ -99,10 +96,15 @@ func save_as_cb() {
 	file_dialog.Destroy()
 	if gtk.GTK_RESPONSE_ACCEPT == res {
 		prev_dir = dialog_folder
+		var be, en gtk.GtkTextIter
+		source_buf.GetStartIter(&be)
+		source_buf.GetEndIter(&en)
+		text_to_save := source_buf.GetText(&be, &en, true)
+		add_file_record(dialog_file, []byte(text_to_save), true)
+		file_tree_store()
 		cur_file = dialog_file
 		save_cb()
-		add_file_record(cur_file, true)
-		file_tree_store()
+		tree_view_set_cur_iter()
 	}
 }
 
@@ -115,11 +117,9 @@ func close_cb() {
 	if "" == cur_file {
 		return
 	}
-	cur_file = ""
 	delete_file_record(cur_file)
 	file_tree_store()
-	refresh_title()
-	source_buf_set_content(nil)
+	file_switch_to("")
 }
 
 func paste_done_cb() {

@@ -16,16 +16,24 @@ var selection_flag bool
 var prev_selection string
 var prev_dir string
 var cur_file string
+var cur_iter gtk.GtkTreeIter
 
 func refresh_title() {
 	if "" == cur_file {
 		main_window.SetTitle("*")
 		return
 	}
+	var gtk_icon string
 	if source_buf.GetModified() {
 		main_window.SetTitle("* " + cur_file)
+		gtk_icon = gtk.GTK_STOCK_DELETE
 	} else {
 		main_window.SetTitle(cur_file)
+		gtk_icon = gtk.GTK_STOCK_FILE
+	}
+	if tree_store.IterIsValid(&cur_iter) {
+		tree_store.Set(&cur_iter,
+			gtk.Image().RenderIcon(gtk_icon, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf)
 	}
 }
 
@@ -75,17 +83,6 @@ func bump_message(m string) {
 	dialog.Destroy()
 }
 
-func source_buf_set_content(buf []byte) {
-	source_buf.BeginNotUndoableAction()
-	if nil == buf {
-		source_buf.SetText("")
-	} else {
-		source_buf.SetText(string(buf))
-	}
-	source_buf.SetModified(false)
-	source_buf.EndNotUndoableAction()
-}
-
 func tree_view_select_cb() {
 	var path *gtk.GtkTreePath
 	var column *gtk.GtkTreeViewColumn
@@ -114,6 +111,32 @@ func tree_view_path(iter *gtk.GtkTreeIter) string {
 		iter = &next
 	}
 	return ans
+}
+
+// Sets cur_iter pointing to tree_store node corresponding to current file.
+// Requires properly set cur_file.
+func tree_view_set_cur_iter() {
+	if "" == cur_file {
+		return
+	}
+	var parent gtk.GtkTreeIter
+	name := cur_file
+	tree_model.GetIterFirst(&cur_iter)
+	for {
+		var val gtk.GValue
+		tree_model.GetValue(&cur_iter, 1, &val)
+		cur_str := val.GetString()
+		pos := slashed_prefix(name, cur_str)
+		if pos == len(name) {
+			break
+		} else if pos > 0 {
+			parent.Assign(&cur_iter)
+			tree_model.IterChildren(&cur_iter, &parent)
+			name = name[pos:]
+		} else {
+			tree_model.IterNext(&cur_iter)
+		}
+	}
 }
 
 func init_widgets() {
@@ -226,6 +249,9 @@ func init_vars() {
 	file_map = make(map[string]*FileRecord)
 	cur_file = ""
 	refresh_title()
+	var iter gtk.GtkTextIter
+	source_buf.GetStartIter(&iter)
+	source_buf.CreateMark("focus_mark", &iter, false)
 }
 
 func main() {
