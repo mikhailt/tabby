@@ -53,8 +53,7 @@ func slashed_prefix(a string, b string) int {
 
 // In case pos == 0 node means last smaller than this node;
 // pos > 0 means that found node with common slashed prefix with name.
-func file_tree_find_among_children(root *FileTreeNode, 
-    name string) (node *FileTreeNode, position int, prev *FileTreeNode) {
+func file_tree_find_among_children(root *FileTreeNode, name string) (node *FileTreeNode, position int, prev *FileTreeNode) {
 	var pos int
 	var cur_child, prev_child *FileTreeNode
 	var last_smaller_node *FileTreeNode

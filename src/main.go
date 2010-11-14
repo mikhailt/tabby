@@ -135,17 +135,17 @@ func init_tabby() {
 	file_submenu.Append(exit_item)
 	exit_item.Connect("activate", exit_cb, nil)
 
-  navigation_item := gtk.MenuItemWithMnemonic("_Navigation")
+	navigation_item := gtk.MenuItemWithMnemonic("_Navigation")
 	menubar.Append(navigation_item)
 	navigation_submenu := gtk.Menu()
 	navigation_item.SetSubmenu(navigation_submenu)
-	
+
 	next_instance_item := gtk.MenuItemWithMnemonic("_Next Instance")
 	navigation_submenu.Append(next_instance_item)
 	next_instance_item.Connect("activate", next_instance_cb, nil)
 	next_instance_item.AddAccelerator("activate", accel_group, gdk.GDK_F3,
 		0, gtk.GTK_ACCEL_VISIBLE)
-		
+
 	find_item := gtk.MenuItemWithMnemonic("_Find")
 	navigation_submenu.Append(find_item)
 	find_item.Connect("activate", find_cb, nil)
@@ -179,9 +179,9 @@ func init_tabby() {
 func init_vars() {
 	file_map = make(map[string]*FileRecord)
 	cur_file = ""
-  refresh_title()
-  session_restore()
-  file_tree_store()
+	refresh_title()
+	session_restore()
+	file_tree_store()
 }
 
 func main() {

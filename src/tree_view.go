@@ -1,7 +1,7 @@
 package main
 
 import (
-  "gtk"
+	"gtk"
 )
 
 func tree_view_select_cb() {
