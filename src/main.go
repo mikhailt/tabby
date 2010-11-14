@@ -12,9 +12,7 @@ var tree_view *gtk.GtkTreeView
 var tree_store *gtk.GtkTreeStore
 var tree_model *gtk.GtkTreeModel
 var source_view *gtk.GtkSourceView
-var selection_flag bool
-var prev_selection string
-var prev_dir string
+
 var cur_file string
 var cur_iter gtk.GtkTreeIter
 
@@ -41,37 +39,6 @@ func buf_changed_cb() {
 	refresh_title()
 }
 
-func mark_set_cb() {
-	var cur gtk.GtkTextIter
-	var be, en gtk.GtkTextIter
-
-	source_buf.GetSelectionBounds(&be, &en)
-	selection := source_buf.GetSlice(&be, &en, false)
-	if prev_selection == selection {
-		return
-	}
-	prev_selection = selection
-
-	if selection_flag {
-		source_buf.GetStartIter(&be)
-		source_buf.GetEndIter(&en)
-		source_buf.RemoveTagByName("instance", &be, &en)
-		selection_flag = false
-	}
-
-	sel_len := len(selection)
-	if (sel_len <= 1) || (sel_len >= 100) {
-		return
-	} else {
-		selection_flag = true
-	}
-
-	source_buf.GetStartIter(&cur)
-	for cur.ForwardSearch(selection, 0, &be, &cur, nil) {
-		source_buf.ApplyTagByName("instance", &be, &cur)
-	}
-}
-
 func bump_message(m string) {
 	dialog := gtk.MessageDialog(
 		main_window.GetTopLevelAsWindow(),
@@ -83,63 +50,7 @@ func bump_message(m string) {
 	dialog.Destroy()
 }
 
-func tree_view_select_cb() {
-	var path *gtk.GtkTreePath
-	var column *gtk.GtkTreeViewColumn
-	tree_view.GetCursor(&path, &column)
-	var iter gtk.GtkTreeIter
-	tree_model.GetIterFromString(&iter, path.String())
-	sel_file := tree_view_path(&iter)
-	if name_is_dir(sel_file) {
-		return
-	}
-	file_save_current()
-	file_switch_to(sel_file)
-}
-
-func tree_view_path(iter *gtk.GtkTreeIter) string {
-	var ans string
-	ans = ""
-	for {
-		var val gtk.GValue
-		var next gtk.GtkTreeIter
-		tree_model.GetValue(iter, 1, &val)
-		ans = val.GetString() + ans
-		if false == tree_model.IterParent(&next, iter) {
-			break
-		}
-		iter = &next
-	}
-	return ans
-}
-
-// Sets cur_iter pointing to tree_store node corresponding to current file.
-// Requires properly set cur_file.
-func tree_view_set_cur_iter() {
-	if "" == cur_file {
-		return
-	}
-	var parent gtk.GtkTreeIter
-	name := cur_file
-	tree_model.GetIterFirst(&cur_iter)
-	for {
-		var val gtk.GValue
-		tree_model.GetValue(&cur_iter, 1, &val)
-		cur_str := val.GetString()
-		pos := slashed_prefix(name, cur_str)
-		if pos == len(name) {
-			break
-		} else if pos > 0 {
-			parent.Assign(&cur_iter)
-			tree_model.IterChildren(&cur_iter, &parent)
-			name = name[pos:]
-		} else {
-			tree_model.IterNext(&cur_iter)
-		}
-	}
-}
-
-func init_widgets() {
+func init_tabby() {
 	lang_man := gtk.SourceLanguageManagerGetDefault()
 	lang := lang_man.GetLanguage("go")
 	if nil == lang.SourceLanguage {
@@ -224,8 +135,25 @@ func init_widgets() {
 	file_submenu.Append(exit_item)
 	exit_item.Connect("activate", exit_cb, nil)
 
+  navigation_item := gtk.MenuItemWithMnemonic("_Navigation")
+	menubar.Append(navigation_item)
+	navigation_submenu := gtk.Menu()
+	navigation_item.SetSubmenu(navigation_submenu)
+	
+	next_instance_item := gtk.MenuItemWithMnemonic("_Next Instance")
+	navigation_submenu.Append(next_instance_item)
+	next_instance_item.Connect("activate", next_instance_cb, nil)
+	next_instance_item.AddAccelerator("activate", accel_group, gdk.GDK_F3,
+		0, gtk.GTK_ACCEL_VISIBLE)
+		
+	find_item := gtk.MenuItemWithMnemonic("_Find")
+	navigation_submenu.Append(find_item)
+	find_item.Connect("activate", find_cb, nil)
+	find_item.AddAccelerator("activate", accel_group, gdk.GDK_f,
+		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
+
 	tree_window := gtk.ScrolledWindow(nil, nil)
-	tree_window.SetSizeRequest(300, 0)
+	tree_window.SetSizeRequest(330, 0)
 	tree_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
 	hpaned.Add1(tree_window)
 	tree_window.Add(tree_view)
@@ -236,27 +164,28 @@ func init_widgets() {
 	text_window.Add(source_view)
 
 	main_window = gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
+	main_window.AddAccelGroup(accel_group)
 	main_window.Maximize()
 	main_window.Connect("destroy", exit_cb, "")
 	main_window.Add(vbox)
+	// init_tabby blocks for some reason if called after ShowAll.
+	init_vars()
 	main_window.ShowAll()
-	main_window.AddAccelGroup(accel_group)
-
+	// Cannot be called before ShowAll. This is also not clear.
+	file_switch_to(file_stack_pop())
 	source_view.GrabFocus()
 }
 
 func init_vars() {
 	file_map = make(map[string]*FileRecord)
 	cur_file = ""
-	refresh_title()
-	var iter gtk.GtkTextIter
-	source_buf.GetStartIter(&iter)
-	source_buf.CreateMark("focus_mark", &iter, false)
+  refresh_title()
+  session_restore()
+  file_tree_store()
 }
 
 func main() {
 	gtk.Init(nil)
-	init_widgets()
-	init_vars()
+	init_tabby()
 	gtk.Main()
 }
