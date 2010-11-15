@@ -186,7 +186,7 @@ func file_tree_remove(root *FileTreeNode, name string, merge_flag bool) {
 				file_tree_merge_parent_and_child(cur_child.brother)
 			}
 		}
-		
+
 		return
 	}
 	bump_message("file_tree_remove: unexpected case: name = " + name)
@@ -202,16 +202,17 @@ func file_tree_remove_node(cur *FileTreeNode, prev *FileTreeNode) {
 
 func file_tree_merge_parent_and_child(child *FileTreeNode) {
 	parent := child.parent
-	if parent != &file_tree_root {
-		grand_parent := parent.parent
-		new_name := parent.name + child.name
-		if name_is_dir(new_name) {
-			grand_parent.child = child
-			child.parent = grand_parent
-			child.name = new_name
-		} else {
-			file_tree_remove(grand_parent, parent.name, false)
-			file_tree_insert_rec(grand_parent, new_name, child.rec)
-		}
+	if &file_tree_root == parent {
+		return
+	}
+	grand_parent := parent.parent
+	_, _, parent_prev := file_tree_find_among_children(grand_parent, parent.name)
+	child.parent = grand_parent
+	child.brother = parent.brother
+	child.name = parent.name + child.name
+	if nil == parent_prev {
+		grand_parent.child = child
+	} else {
+		parent_prev.brother = child
 	}
 }

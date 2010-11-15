@@ -4,6 +4,7 @@ import (
 	"gtk"
 	"gdk"
 	"runtime"
+	"strings"
 )
 
 const STACK_SIZE = 64
@@ -14,6 +15,11 @@ var prev_selection string
 var file_stack [STACK_SIZE]string
 var file_stack_top = 0
 var file_stack_base = 0
+
+var prev_global bool = false
+var prev_pattern string = ""
+
+var accel_group *gtk.GtkAccelGroup = nil
 
 func file_save_current() {
 	if "" == cur_file {
@@ -139,6 +145,14 @@ func mark_set_cb() {
 	}
 }
 
+func find_next_instance(start, be, en *gtk.GtkTextIter, pattern string) bool {
+	if start.ForwardSearch(pattern, 0, be, en, nil) {
+		return true
+	}
+	source_buf.GetStartIter(be)
+	return be.ForwardSearch(pattern, 0, be, en, nil)
+}
+
 func next_instance_cb() {
 	var be, en gtk.GtkTextIter
 	source_buf.GetSelectionBounds(&be, &en)
@@ -146,33 +160,69 @@ func next_instance_cb() {
 	if "" == selection {
 		return
 	}
-	if false == en.ForwardSearch(selection, 0, &be, &en, nil) {
-		source_buf.GetStartIter(&be)
-		be.ForwardSearch(selection, 0, &be, &en, nil)
-	}
+	// find_next_instance cannot return false because selection is not empty.
+	find_next_instance(&en, &be, &en, selection)
 	move_focus_and_selection(&be, &en)
 }
 
+func find_global(pattern string) {
+	var iter gtk.GtkTreeIter
+	prev_pattern = pattern
+	search_store.Clear()
+	for name, rec := range file_map {
+		if -1 != strings.Index(string(rec.buf), pattern) {
+			search_store.Append(&iter, nil)
+			search_store.Set(&iter, name)
+		}
+	}
+}
+
 func find_cb() {
+	dialog_ok, pattern, global := find_dialog()
+	if false == dialog_ok {
+		return
+	}
+	if global {
+		find_global(pattern)
+	}
+	find_in_current_file(pattern)
+}
+
+func find_in_current_file(pattern string) {
+	var be, en gtk.GtkTextIter
+	source_buf.GetSelectionBounds(&be, &en)
+	if find_next_instance(&en, &be, &en, pattern) {
+		move_focus_and_selection(&be, &en)
+		mark_set_cb()
+	}
+}
+
+func find_dialog() (bool, string, bool) {
+	if nil == accel_group {
+		accel_group = gtk.AccelGroup()
+	}
 	dialog := gtk.Dialog()
+	defer dialog.Destroy()
+	dialog.SetTitle("Find")
 	dialog.AddButton("_Find", gtk.GTK_RESPONSE_ACCEPT)
 	dialog.AddButton("_Cancel", gtk.GTK_RESPONSE_CANCEL)
 	w := dialog.GetWidgetForResponse(gtk.GTK_RESPONSE_ACCEPT)
-	accel_group := gtk.AccelGroup()
 	dialog.AddAccelGroup(accel_group)
 	w.AddAccelerator("clicked", accel_group, gdk.GDK_Return,
 		0, gtk.GTK_ACCEL_VISIBLE)
-	dialog.SetDefault(w)
-	dialog.SetHasSeparator(true)
-	//w.GrabFocus()
 	vbox := dialog.GetVBox()
 	entry := gtk.Entry()
 	entry.SetVisible(true)
 	vbox.Add(entry)
+	global_button := gtk.CheckButtonWithLabel("global")
+	global_button.SetVisible(true)
+	global_button.SetActive(prev_global)
+	vbox.Add(global_button)
 	if gtk.GTK_RESPONSE_ACCEPT == dialog.Run() {
-		println(entry.GetText())
+		prev_global = global_button.GetActive()
+		return true, entry.GetText(), prev_global
 	}
-	dialog.Destroy()
+	return false, "", false
 }
 
 func move_focus_and_selection(be *gtk.GtkTextIter, en *gtk.GtkTextIter) {

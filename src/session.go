@@ -18,6 +18,16 @@ func session_save() {
 	file.Close()
 }
 
+func session_open_and_read_file(name string) {
+	read_ok, buf := open_file_read_to_buf(name, false)
+	if false == read_ok {
+		return
+	}
+	if add_file_record(name, buf, true) {
+		file_stack_push(name)
+	}
+}
+
 func session_restore() {
 	file, _ := os.Open(os.Getenv("HOME")+"/.tabby", os.O_RDONLY, 0644)
 	if nil == file {
@@ -31,13 +41,7 @@ func session_restore() {
 			break
 		}
 		str = str[:len(str)-1]
-		read_ok, buf := open_file_read_to_buf(str)
-		if false == read_ok {
-			continue
-		}
-		if add_file_record(str, buf, true) {
-			file_stack_push(str)
-		}
+		session_open_and_read_file(str)
 	}
 	file.Close()
 }

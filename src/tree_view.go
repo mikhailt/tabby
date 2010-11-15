@@ -5,12 +5,7 @@ import (
 )
 
 func tree_view_select_cb() {
-	var path *gtk.GtkTreePath
-	var column *gtk.GtkTreeViewColumn
-	tree_view.GetCursor(&path, &column)
-	var iter gtk.GtkTreeIter
-	tree_model.GetIterFromString(&iter, path.String())
-	sel_file := tree_view_path(&iter)
+	sel_file := tree_view_get_selected_path(tree_view, tree_model, 1)
 	if name_is_dir(sel_file) {
 		return
 	}
@@ -18,18 +13,30 @@ func tree_view_select_cb() {
 	file_switch_to(sel_file)
 }
 
-func tree_view_path(iter *gtk.GtkTreeIter) string {
+func search_view_select_cb() {
+	file := tree_view_get_selected_path(search_view, search_model, 0)
+	file_save_current()
+	file_switch_to(file)
+	find_in_current_file(prev_pattern)
+}
+
+func tree_view_get_selected_path(tree_view *gtk.GtkTreeView, tree_model *gtk.GtkTreeModel, col int) string {
+	var path *gtk.GtkTreePath
+	var column *gtk.GtkTreeViewColumn
+	tree_view.GetCursor(&path, &column)
+	var iter gtk.GtkTreeIter
+	tree_model.GetIterFromString(&iter, path.String())
 	var ans string
 	ans = ""
 	for {
 		var val gtk.GValue
 		var next gtk.GtkTreeIter
-		tree_model.GetValue(iter, 1, &val)
+		tree_model.GetValue(&iter, col, &val)
 		ans = val.GetString() + ans
-		if false == tree_model.IterParent(&next, iter) {
+		if false == tree_model.IterParent(&next, &iter) {
 			break
 		}
-		iter = &next
+		iter.Assign(&next)
 	}
 	return ans
 }

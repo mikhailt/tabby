@@ -15,11 +15,11 @@ func new_cb() {
 
 func open_cb() {
 	file_save_current()
-	dialog_ok, dialog_file := open_file_dialog()
+	dialog_ok, dialog_file := file_chooser_dialog(OPEN_DIALOG)
 	if false == dialog_ok {
 		return
 	}
-	read_ok, buf := open_file_read_to_buf(dialog_file)
+	read_ok, buf := open_file_read_to_buf(dialog_file, true)
 	if false == read_ok {
 		return
 	}
@@ -29,11 +29,25 @@ func open_cb() {
 	}
 }
 
+func open_rec_cb() {
+	dialog_ok, dialog_dir := file_chooser_dialog(OPEN_DIR_DIALOG)
+	if false == dialog_ok {
+		return
+	}
+	dir, _ := os.Open(dialog_dir, os.O_RDONLY, 0)
+	if nil == dir {
+		bump_message("Unable to open directory " + dialog_dir)
+	}
+	open_dir(dir, dialog_dir, true)
+	dir.Close()
+	file_tree_store()
+}
+
 func save_cb() {
 	if "" == cur_file {
 		save_as_cb()
 	} else {
-		file, _ := os.Open(cur_file, os.O_CREAT|os.O_WRONLY, 0700)
+		file, _ := os.Open(cur_file, os.O_CREAT|os.O_WRONLY, 0644)
 		if nil == file {
 			bump_message("Unable to open file for writing: " + cur_file)
 			return
@@ -54,7 +68,7 @@ func save_cb() {
 }
 
 func save_as_cb() {
-	dialog_ok, dialog_file := save_as_file_dialog()
+	dialog_ok, dialog_file := file_chooser_dialog(SAVE_DIALOG)
 	if false == dialog_ok {
 		return
 	}
@@ -92,25 +106,8 @@ func paste_done_cb() {
 	selection_flag = false
 }
 
-func open_file_dialog() (bool, string) {
-	file_dialog := gtk.FileChooserDialog2("", source_view.GetTopLevelAsWindow(),
-		gtk.GTK_FILE_CHOOSER_ACTION_OPEN,
-		gtk.GTK_STOCK_CANCEL, gtk.GTK_RESPONSE_CANCEL,
-		gtk.GTK_STOCK_OPEN, gtk.GTK_RESPONSE_ACCEPT)
-	file_dialog.SetCurrentFolder(prev_dir)
-	res := file_dialog.Run()
-	dialog_folder := file_dialog.GetCurrentFolder()
-	dialog_file := file_dialog.GetFilename()
-	file_dialog.Destroy()
-	if gtk.GTK_RESPONSE_ACCEPT == res {
-		prev_dir = dialog_folder
-		return true, dialog_file
-	}
-	return false, ""
-}
-
-func open_file_read_to_buf(name string) (bool, []byte) {
-	file, _ := os.Open(name, os.O_RDONLY, 0700)
+func open_file_read_to_buf(name string, verbose bool) (bool, []byte) {
+	file, _ := os.Open(name, os.O_RDONLY, 0644)
 	if nil == file {
 		bump_message("Unable to open file for reading: " + name)
 		return false, nil
@@ -131,23 +128,65 @@ func open_file_read_to_buf(name string) (bool, []byte) {
 	file.Close()
 	if nread > 0 {
 		if false == glib.Utf8Validate(buf, nread, nil) {
-			bump_message("File " + name + " is not correct utf8 text")
+			if verbose {
+				bump_message("File " + name + " is not correct utf8 text")
+			}
 			return false, nil
 		}
 	}
 	return true, buf
 }
 
-func save_as_file_dialog() (bool, string) {
-	file_dialog := gtk.FileChooserDialog2("", source_view.GetTopLevelAsWindow(),
-		gtk.GTK_FILE_CHOOSER_ACTION_SAVE,
+func open_dir(dir *os.File, dir_name string, recursively bool) {
+	names, _ := dir.Readdirnames(-1)
+	for _, name := range names {
+		abs_name := dir_name + "/" + name
+		fi, _ := os.Lstat(abs_name)
+		if nil == fi {
+			continue
+		}
+		if fi.IsDirectory() {
+			if recursively {
+				child_dir, _ := os.Open(abs_name, os.O_RDONLY, 0)
+				if nil != child_dir {
+					open_dir(child_dir, abs_name, true)
+				}
+				child_dir.Close()
+			}
+		} else {
+			session_open_and_read_file(abs_name)
+		}
+	}
+}
+
+const (
+	OPEN_DIALOG     = 0
+	SAVE_DIALOG     = 1
+	OPEN_DIR_DIALOG = 2
+)
+
+func file_chooser_dialog(t int) (bool, string) {
+	var action int
+	var ok_stock string
+	if OPEN_DIALOG == t {
+		action = gtk.GTK_FILE_CHOOSER_ACTION_OPEN
+		ok_stock = gtk.GTK_STOCK_OPEN
+	} else if SAVE_DIALOG == t {
+		action = gtk.GTK_FILE_CHOOSER_ACTION_SAVE
+		ok_stock = gtk.GTK_STOCK_SAVE
+	} else if OPEN_DIR_DIALOG == t {
+		action = gtk.GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER
+		ok_stock = gtk.GTK_STOCK_OPEN
+	}
+	dialog := gtk.FileChooserDialog2("", source_view.GetTopLevelAsWindow(),
+		action,
 		gtk.GTK_STOCK_CANCEL, gtk.GTK_RESPONSE_CANCEL,
-		gtk.GTK_STOCK_SAVE, gtk.GTK_RESPONSE_ACCEPT)
-	file_dialog.SetCurrentFolder(prev_dir)
-	res := file_dialog.Run()
-	dialog_folder := file_dialog.GetCurrentFolder()
-	dialog_file := file_dialog.GetFilename()
-	file_dialog.Destroy()
+		ok_stock, gtk.GTK_RESPONSE_ACCEPT)
+	dialog.SetCurrentFolder(prev_dir)
+	res := dialog.Run()
+	dialog_folder := dialog.GetCurrentFolder()
+	dialog_file := dialog.GetFilename()
+	dialog.Destroy()
 	if gtk.GTK_RESPONSE_ACCEPT == res {
 		prev_dir = dialog_folder
 		return true, dialog_file

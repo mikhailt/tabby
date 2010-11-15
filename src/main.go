@@ -8,10 +8,15 @@ import (
 
 var main_window *gtk.GtkWindow
 var source_buf *gtk.GtkSourceBuffer
+var source_view *gtk.GtkSourceView
+
 var tree_view *gtk.GtkTreeView
 var tree_store *gtk.GtkTreeStore
 var tree_model *gtk.GtkTreeModel
-var source_view *gtk.GtkSourceView
+
+var search_view *gtk.GtkTreeView
+var search_store *gtk.GtkTreeStore
+var search_model *gtk.GtkTreeModel
 
 var cur_file string
 var cur_iter gtk.GtkTreeIter
@@ -76,6 +81,16 @@ func init_tabby() {
 	tree_view.SetHeadersVisible(false)
 	tree_view.Connect("cursor-changed", tree_view_select_cb, nil)
 
+	search_store = gtk.TreeStore(gtk.TYPE_STRING)
+	search_view = gtk.TreeView()
+	search_view.ModifyFontEasy("Regular 8")
+	search_model = search_store.ToTreeModel()
+	search_view.SetModel(search_model)
+	search_view.AppendColumn(gtk.TreeViewColumnWithAttributes(
+		"", gtk.CellRendererText(), "text", 0))
+	search_view.SetHeadersVisible(false)
+	search_view.Connect("cursor-changed", search_view_select_cb, nil)
+
 	source_view = gtk.SourceViewWithBuffer(source_buf)
 	source_view.ModifyFontEasy("Monospace Regular 10")
 	source_view.SetAutoIndent(true)
@@ -88,13 +103,17 @@ func init_tabby() {
 	source_view.SetDrawSpaces(gtk.GTK_SOURCE_DRAW_SPACES_TAB)
 	source_view.SetTabWidth(2)
 	source_view.SetSmartHomeEnd(gtk.GTK_SOURCE_SMART_HOME_END_ALWAYS)
+	source_view.SetSizeRequest(700, 0)
+	source_view.SetWrapMode(gtk.GTK_WRAP_WORD)
 
 	vbox := gtk.VBox(false, 0)
-	hpaned := gtk.HPaned()
+	inner_hpaned := gtk.HPaned()
+	outer_hpaned := gtk.HPaned()
+	outer_hpaned.Add1(inner_hpaned)
 
 	menubar := gtk.MenuBar()
 	vbox.PackStart(menubar, false, false, 0)
-	vbox.PackStart(hpaned, true, true, 0)
+	vbox.PackStart(outer_hpaned, true, true, 0)
 
 	file_item := gtk.MenuItemWithMnemonic("_File")
 	menubar.Append(file_item)
@@ -114,6 +133,10 @@ func init_tabby() {
 	open_item.Connect("activate", open_cb, nil)
 	open_item.AddAccelerator("activate", accel_group, gdk.GDK_o,
 		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
+
+	open_rec_item := gtk.MenuItemWithMnemonic("Open _Recursively")
+	file_submenu.Append(open_rec_item)
+	open_rec_item.Connect("activate", open_rec_cb, nil)
 
 	save_item := gtk.MenuItemWithMnemonic("_Save")
 	file_submenu.Append(save_item)
@@ -155,12 +178,17 @@ func init_tabby() {
 	tree_window := gtk.ScrolledWindow(nil, nil)
 	tree_window.SetSizeRequest(330, 0)
 	tree_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
-	hpaned.Add1(tree_window)
+	inner_hpaned.Add1(tree_window)
 	tree_window.Add(tree_view)
+
+	search_window := gtk.ScrolledWindow(nil, nil)
+	search_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
+	outer_hpaned.Add2(search_window)
+	search_window.Add(search_view)
 
 	text_window := gtk.ScrolledWindow(nil, nil)
 	text_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_ALWAYS)
-	hpaned.Add2(text_window)
+	inner_hpaned.Add2(text_window)
 	text_window.Add(source_view)
 
 	main_window = gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
