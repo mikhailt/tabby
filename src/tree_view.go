@@ -5,7 +5,7 @@ import (
 )
 
 func tree_view_select_cb() {
-	sel_file := tree_view_get_selected_path(tree_view, tree_model, 1)
+	sel_file := tree_view_get_selected_path(tree_view, tree_model, 0)
 	if name_is_dir(sel_file) {
 		return
 	}
@@ -52,7 +52,7 @@ func tree_view_set_cur_iter() {
 	tree_model.GetIterFirst(&cur_iter)
 	for {
 		var val gtk.GValue
-		tree_model.GetValue(&cur_iter, 1, &val)
+		tree_model.GetValue(&cur_iter, 0, &val)
 		cur_str := val.GetString()
 		pos := slashed_prefix(name, cur_str)
 		if pos == len(name) {

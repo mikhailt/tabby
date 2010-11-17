@@ -5,6 +5,7 @@ gofmt src/file_record.go > file_record.go
 gofmt src/navigation.go > navigation.go
 gofmt src/session.go > session.go
 gofmt src/tree_view.go > tree_view.go
+gofmt file_tree/file_tree.go > file_tree2.go
 mv main.go ./src/main.go
 mv menu_callback.go ./src/menu_callback.go
 mv file_tree.go ./src/file_tree.go
@@ -12,3 +13,4 @@ mv file_record.go ./src/file_record.go
 mv navigation.go ./src/navigation.go
 mv session.go ./src/session.go
 mv tree_view.go ./src/tree_view.go
+mv file_tree2.go ./file_tree/file_tree.go

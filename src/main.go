@@ -3,7 +3,8 @@ package main
 import (
 	"gtk"
 	"gdk"
-	"gdkpixbuf"
+	//"gdkpixbuf"
+	"file_tree"
 )
 
 var main_window *gtk.GtkWindow
@@ -26,17 +27,17 @@ func refresh_title() {
 		main_window.SetTitle("*")
 		return
 	}
-	var gtk_icon string
+	//var gtk_icon string
 	if source_buf.GetModified() {
 		main_window.SetTitle("* " + cur_file)
-		gtk_icon = gtk.GTK_STOCK_DELETE
+		//gtk_icon = gtk.GTK_STOCK_DELETE
 	} else {
 		main_window.SetTitle(cur_file)
-		gtk_icon = gtk.GTK_STOCK_FILE
+		//gtk_icon = gtk.GTK_STOCK_FILE
 	}
 	if tree_store.IterIsValid(&cur_iter) {
-		tree_store.Set(&cur_iter,
-			gtk.Image().RenderIcon(gtk_icon, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf)
+		//tree_store.Set(&cur_iter,
+		//	gtk.Image().RenderIcon(gtk_icon, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf)
 	}
 }
 
@@ -69,15 +70,15 @@ func init_tabby() {
 
 	source_buf.CreateTag("instance", map[string]string{"background": "#FF8080"})
 
-	tree_store = gtk.TreeStore(gdkpixbuf.GetGdkPixbufType(), gtk.TYPE_STRING)
-	tree_view = gtk.TreeView()
+	tree_store = gtk.TreeStore(gtk.TYPE_STRING)
+	tree_view = file_tree.NewFileTree()
 	tree_view.ModifyFontEasy("Regular 8")
 	tree_model = tree_store.ToTreeModel()
 	tree_view.SetModel(tree_model)
-	tree_view.AppendColumn(gtk.TreeViewColumnWithAttributes(
-		"", gtk.CellRendererPixbuf(), "pixbuf", 0))
-	tree_view.AppendColumn(gtk.TreeViewColumnWithAttributes(
-		"", gtk.CellRendererText(), "text", 1))
+	//tree_view.AppendColumn(gtk.TreeViewColumnWithAttributes(
+	//	"", gtk.CellRendererPixbuf(), "pixbuf", 0))
+	//tree_view.AppendColumn(gtk.TreeViewColumnWithAttributes(
+	//	"", gtk.CellRendererText(), "text", 0))
 	tree_view.SetHeadersVisible(false)
 	tree_view.Connect("cursor-changed", tree_view_select_cb, nil)
 
