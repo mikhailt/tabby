@@ -80,7 +80,7 @@ func save_as_cb() {
 	file_tree_store()
 	cur_file = dialog_file
 	save_cb()
-	tree_view_set_cur_iter()
+	tree_view_set_cur_iter(true)
 }
 
 func exit_cb() {
@@ -94,8 +94,8 @@ func close_cb() {
 		return
 	}
 	delete_file_record(cur_file)
-	file_tree_store()
 	file_switch_to(file_stack_pop())
+	file_tree_store()
 }
 
 func paste_done_cb() {

@@ -11,16 +11,30 @@ void tabby_renderer(GtkTreeViewColumn *col,
                     GtkTreeIter       *iter,
                     gpointer           user_data) {
   gchar* str;
-  int len;
+  unsigned char c;
 
   gtk_tree_model_get(model, iter, 0, &str, -1);
-  len = strlen(str);
-  if ('/' == str[len - 1]) {
-    g_object_set(renderer, "foreground", "Blue", "foreground-set", TRUE, NULL);
+  c = str[0];
+  if ('d' == c) {
+    g_object_set(renderer, "foreground", "Blue", "foreground-set", TRUE, 
+                 "background", "White", "background-set", TRUE, NULL);
+  } else if ('D' == c) {
+    g_object_set(renderer, "foreground", "Blue", "foreground-set", TRUE,
+                 "background", "#DBEDFF", "background-set", TRUE, NULL);
   } else {
-    g_object_set(renderer, "foreground", "Black", "foreground-set", TRUE, NULL);
+    if (c < 'a') {
+      g_object_set(renderer, "background", "#B3FFC2", "background-set", 
+                   TRUE, NULL);
+    } else {
+      g_object_set(renderer, "background", "White", "background-set", TRUE, NULL);
+    }
+    if (('c' == c) || ('C' == c)) {
+      g_object_set(renderer, "foreground", "Red", "foreground-set", TRUE, NULL);  
+    } else {
+      g_object_set(renderer, "foreground", "Black", "foreground-set", TRUE, NULL);
+    }
   }
-  g_object_set(renderer, "text", str, NULL);
+  g_object_set(renderer, "text", str + 1, NULL);
   free(str);
 }
 
@@ -28,7 +42,7 @@ static void* create_tabby_file_tree() {
   GtkTreeViewColumn   *col;
   GtkCellRenderer     *renderer;
   GtkWidget           *view;
-  
+
   view = gtk_tree_view_new();
   col = gtk_tree_view_column_new();
   gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
@@ -42,10 +56,7 @@ static void* create_tabby_file_tree() {
 import "C"
 import "gtk"
 
-//g_object_set(renderer, "text", buf, NULL); 
-
-
 func NewFileTree() *gtk.GtkTreeView {
-  return &gtk.GtkTreeView{gtk.GtkContainer{gtk.GtkWidget{
-    gtk.ToGtkWidget(C.create_tabby_file_tree())}}}
+	return &gtk.GtkTreeView{gtk.GtkContainer{gtk.GtkWidget{
+		gtk.ToGtkWidget(C.create_tabby_file_tree())}}}
 }

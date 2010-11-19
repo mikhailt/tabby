@@ -27,17 +27,19 @@ func refresh_title() {
 		main_window.SetTitle("*")
 		return
 	}
-	//var gtk_icon string
+	var icon byte
 	if source_buf.GetModified() {
 		main_window.SetTitle("* " + cur_file)
-		//gtk_icon = gtk.GTK_STOCK_DELETE
+		icon = 'C'
 	} else {
 		main_window.SetTitle(cur_file)
-		//gtk_icon = gtk.GTK_STOCK_FILE
+		icon = 'B'
 	}
 	if tree_store.IterIsValid(&cur_iter) {
-		//tree_store.Set(&cur_iter,
-		//	gtk.Image().RenderIcon(gtk_icon, gtk.GTK_ICON_SIZE_MENU, "").Pixbuf)
+		var val gtk.GValue
+		tree_model.GetValue(&cur_iter, 0, &val)
+		tree_store.Set(&cur_iter,
+			string(icon)+val.GetString()[1:])
 	}
 }
 

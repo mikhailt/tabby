@@ -43,6 +43,7 @@ func file_save_current() {
 }
 
 func file_switch_to(name string) {
+	tree_view_set_cur_iter(false)
 	rec, found := file_map[name]
 	var text_to_set string
 	var modified_to_set bool
@@ -66,7 +67,7 @@ func file_switch_to(name string) {
 	source_buf.SetModified(modified_to_set)
 	source_buf.EndNotUndoableAction()
 	cur_file = name_to_set
-	tree_view_set_cur_iter()
+	tree_view_set_cur_iter(true)
 	refresh_title()
 	source_view.GrabFocus()
 	var be_iter, en_iter gtk.GtkTextIter
@@ -230,4 +231,15 @@ func move_focus_and_selection(be *gtk.GtkTextIter, en *gtk.GtkTextIter) {
 	source_buf.MoveMarkByName("selection_bound", en)
 	mark := source_buf.GetMark("insert")
 	source_view.ScrollToMark(mark, 0, true, 1, 0.5)
+}
+
+func tree_view_scroll_to_cur_iter() {
+	if "" == cur_file {
+		return
+	}
+	if false == tree_store.IterIsValid(&cur_iter) {
+		return
+	}
+	path := tree_model.GetPath(&cur_iter)
+	tree_view.ScrollToCell(path, nil, true, 0.5, 0)
 }

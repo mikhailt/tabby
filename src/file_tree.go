@@ -126,12 +126,23 @@ func file_tree_insert_rec(root *FileTreeNode, name string, rec *FileRecord) {
 // true for directories.
 func file_tree_store_rec(root *FileTreeNode, iter *gtk.GtkTreeIter, flag bool) {
 	var child_iter gtk.GtkTreeIter
+	var icon byte
 	for cur_child := root.child; nil != cur_child; cur_child = cur_child.brother {
-		if flag != name_is_dir(cur_child.name) {
+		is_dir := name_is_dir(cur_child.name)
+		if flag != is_dir {
 			continue
 		}
+		if is_dir {
+			icon = 'd'
+		} else {
+			if cur_child.rec.modified {
+				icon = 'c'
+			} else {
+				icon = 'b'
+			}
+		}
 		tree_store.Append(&child_iter, iter)
-		tree_store.Set(&child_iter, cur_child.name)
+		tree_store.Set(&child_iter, string(icon)+cur_child.name)
 		file_tree_store_rec(cur_child, &child_iter, false)
 		file_tree_store_rec(cur_child, &child_iter, true)
 	}
@@ -142,6 +153,7 @@ func file_tree_store() {
 	file_tree_store_rec(&file_tree_root, nil, false)
 	file_tree_store_rec(&file_tree_root, nil, true)
 	tree_view.ExpandAll()
+	tree_view_set_cur_iter(true)
 }
 
 func file_tree_remove(root *FileTreeNode, name string, merge_flag bool) {
