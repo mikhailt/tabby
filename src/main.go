@@ -38,8 +38,7 @@ func refresh_title() {
 	if tree_store.IterIsValid(&cur_iter) {
 		var val gtk.GValue
 		tree_model.GetValue(&cur_iter, 0, &val)
-		tree_store.Set(&cur_iter,
-			string(icon)+val.GetString()[1:])
+		tree_store.Set(&cur_iter, string(icon)+val.GetString()[1:])
 	}
 }
 
@@ -85,7 +84,7 @@ func init_tabby() {
 	tree_view.Connect("cursor-changed", tree_view_select_cb, nil)
 
 	search_store = gtk.TreeStore(gtk.TYPE_STRING)
-	search_view = gtk.TreeView()
+	search_view = file_tree.NewSearchTree()
 	search_view.ModifyFontEasy("Regular 8")
 	search_model = search_store.ToTreeModel()
 	search_view.SetModel(search_model)
@@ -178,6 +177,18 @@ func init_tabby() {
 	find_item.AddAccelerator("activate", accel_group, gdk.GDK_f,
 		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
 
+	prev_file_item := gtk.MenuItemWithMnemonic("Prev File")
+	navigation_submenu.Append(prev_file_item)
+	prev_file_item.Connect("activate", prev_file_cb, nil)
+	prev_file_item.AddAccelerator("activate", accel_group, gdk.GDK_F7,
+		0, gtk.GTK_ACCEL_VISIBLE)
+
+	next_file_item := gtk.MenuItemWithMnemonic("Next File")
+	navigation_submenu.Append(next_file_item)
+	next_file_item.Connect("activate", next_file_cb, nil)
+	next_file_item.AddAccelerator("activate", accel_group, gdk.GDK_F8,
+		0, gtk.GTK_ACCEL_VISIBLE)
+
 	tree_window := gtk.ScrolledWindow(nil, nil)
 	tree_window.SetSizeRequest(330, 0)
 	tree_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
@@ -204,6 +215,7 @@ func init_tabby() {
 	main_window.ShowAll()
 	// Cannot be called before ShowAll. This is also not clear.
 	file_switch_to(file_stack_pop())
+	stack_prev(&file_stack_max)
 	source_view.GrabFocus()
 }
 

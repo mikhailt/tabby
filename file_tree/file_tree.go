@@ -38,6 +38,22 @@ void tabby_renderer(GtkTreeViewColumn *col,
   free(str);
 }
 
+void search_renderer(GtkTreeViewColumn *col,
+                     GtkCellRenderer   *renderer,
+                     GtkTreeModel      *model,
+                     GtkTreeIter       *iter,
+                     gpointer           user_data) {
+  gchar* str;
+  gchar* p;
+
+  gtk_tree_model_get(model, iter, 0, &str, -1);
+  for (p = &str[strlen(str) - 1]; '/' != *p; --p) {
+    ;
+  }
+  g_object_set(renderer, "text", p + 1, NULL);
+  free(str);
+}
+
 static void* create_tabby_file_tree() {
   GtkTreeViewColumn   *col;
   GtkCellRenderer     *renderer;
@@ -52,6 +68,21 @@ static void* create_tabby_file_tree() {
                                           NULL);
   return view;
 }
+
+static void* create_tabby_search_tree() {
+  GtkTreeViewColumn   *col;
+  GtkCellRenderer     *renderer;
+  GtkWidget           *view;
+
+  view = gtk_tree_view_new();
+  col = gtk_tree_view_column_new();
+  gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+  renderer = gtk_cell_renderer_text_new();
+  gtk_tree_view_column_pack_start(col, renderer, TRUE);
+  gtk_tree_view_column_set_cell_data_func(col, renderer, search_renderer, NULL,
+                                          NULL);
+  return view;
+}
 */
 import "C"
 import "gtk"
@@ -59,4 +90,9 @@ import "gtk"
 func NewFileTree() *gtk.GtkTreeView {
 	return &gtk.GtkTreeView{gtk.GtkContainer{gtk.GtkWidget{
 		gtk.ToGtkWidget(C.create_tabby_file_tree())}}}
+}
+
+func NewSearchTree() *gtk.GtkTreeView {
+	return &gtk.GtkTreeView{gtk.GtkContainer{gtk.GtkWidget{
+		gtk.ToGtkWidget(C.create_tabby_search_tree())}}}
 }

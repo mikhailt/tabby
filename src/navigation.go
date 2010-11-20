@@ -11,10 +11,12 @@ const STACK_SIZE = 64
 
 var selection_flag bool
 var prev_selection string
+var search_history []string
 
 var file_stack [STACK_SIZE]string
 var file_stack_top = 0
 var file_stack_base = 0
+var file_stack_max = 0
 
 var prev_global bool = false
 var prev_pattern string = ""
@@ -42,6 +44,8 @@ func file_save_current() {
 	runtime.GC()
 }
 
+// Switches to another file. In most cases you want to call file_save_current 
+// before this method. Otherwise current changes will be lost.
 func file_switch_to(name string) {
 	tree_view_set_cur_iter(false)
 	rec, found := file_map[name]
@@ -81,6 +85,9 @@ func file_switch_to(name string) {
 
 func file_stack_push(name string) {
 	file_stack[file_stack_top] = name
+	if file_stack_top == file_stack_max {
+		stack_next(&file_stack_max)
+	}
 	stack_next(&file_stack_top)
 	if file_stack_top == file_stack_base {
 		stack_next(&file_stack_base)
@@ -166,12 +173,22 @@ func next_instance_cb() {
 	move_focus_and_selection(&be, &en)
 }
 
-func find_global(pattern string) {
+func find_global(pattern string, find_file bool) {
 	var iter gtk.GtkTreeIter
-	prev_pattern = pattern
+	var pos int
+	if find_file {
+		prev_pattern = ""
+	} else {
+		prev_pattern = pattern
+	}
 	search_store.Clear()
 	for name, rec := range file_map {
-		if -1 != strings.Index(string(rec.buf), pattern) {
+		if find_file {
+			pos = strings.Index(name, pattern)
+		} else {
+			pos = strings.Index(string(rec.buf), pattern)
+		}
+		if -1 != pos {
 			search_store.Append(&iter, nil)
 			search_store.Set(&iter, name)
 		}
@@ -179,14 +196,18 @@ func find_global(pattern string) {
 }
 
 func find_cb() {
-	dialog_ok, pattern, global := find_dialog()
+	dialog_ok, pattern, global, find_file := find_dialog()
 	if false == dialog_ok {
 		return
 	}
-	if global {
-		find_global(pattern)
+	if find_file {
+		find_global(pattern, true)
+	} else {
+		if global {
+			find_global(pattern, false)
+		}
+		find_in_current_file(pattern)
 	}
-	find_in_current_file(pattern)
 }
 
 func find_in_current_file(pattern string) {
@@ -198,7 +219,7 @@ func find_in_current_file(pattern string) {
 	}
 }
 
-func find_dialog() (bool, string, bool) {
+func find_dialog() (bool, string, bool, bool) {
 	if nil == accel_group {
 		accel_group = gtk.AccelGroup()
 	}
@@ -211,19 +232,42 @@ func find_dialog() (bool, string, bool) {
 	dialog.AddAccelGroup(accel_group)
 	w.AddAccelerator("clicked", accel_group, gdk.GDK_Return,
 		0, gtk.GTK_ACCEL_VISIBLE)
-	vbox := dialog.GetVBox()
-	entry := gtk.Entry()
+	entry := gtk.ComboBoxEntryNewText()
 	entry.SetVisible(true)
-	vbox.Add(entry)
-	global_button := gtk.CheckButtonWithLabel("global")
+	selection := source_selection()
+	if "" != selection {
+		entry.AppendText(selection)
+	}
+	l := len(search_history)
+	for i := l - 1; i >= 0; i-- {
+		entry.AppendText(search_history[i])
+	}
+	entry.SetActive(0)
+	global_button := gtk.CheckButtonWithLabel("Global")
 	global_button.SetVisible(true)
 	global_button.SetActive(prev_global)
+	file_button := gtk.CheckButtonWithLabel("Find file by name pattern")
+	file_button.SetVisible(true)
+	vbox := dialog.GetVBox()
+	vbox.Add(entry)
 	vbox.Add(global_button)
+	vbox.Add(file_button)
 	if gtk.GTK_RESPONSE_ACCEPT == dialog.Run() {
+		entry_text := entry.GetActiveText()
+		if nil == search_history {
+			search_history = make([]string, 1)
+			search_history[0] = entry_text
+		} else {
+			be := 0
+			if 10 <= l {
+				be = 1
+			}
+			search_history = append(search_history[be:], entry_text)
+		}
 		prev_global = global_button.GetActive()
-		return true, entry.GetText(), prev_global
+		return true, entry_text, prev_global, file_button.GetActive()
 	}
-	return false, "", false
+	return false, "", false, false
 }
 
 func move_focus_and_selection(be *gtk.GtkTextIter, en *gtk.GtkTextIter) {
@@ -242,4 +286,29 @@ func tree_view_scroll_to_cur_iter() {
 	}
 	path := tree_model.GetPath(&cur_iter)
 	tree_view.ScrollToCell(path, nil, true, 0.5, 0)
+}
+
+func source_selection() string {
+	var be, en gtk.GtkTextIter
+	source_buf.GetSelectionBounds(&be, &en)
+	return source_buf.GetSlice(&be, &en, false)
+}
+
+func next_file_cb() {
+	if file_stack_top == file_stack_max {
+		return
+	}
+	file_save_current()
+	file_switch_to(file_stack[file_stack_top])
+}
+
+func prev_file_cb() {
+	shift_flag := file_stack_top == file_stack_max
+	file_save_current()
+	if shift_flag {
+		stack_prev(&file_stack_max)
+	}
+	// Popping out cur_file pushed in file_save_current.
+	file_stack_pop()
+	file_switch_to(file_stack_pop())
 }
