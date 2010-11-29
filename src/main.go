@@ -3,7 +3,6 @@ package main
 import (
 	"gtk"
 	"gdk"
-	//"gdkpixbuf"
 	"file_tree"
 )
 
@@ -58,6 +57,9 @@ func bump_message(m string) {
 }
 
 func init_tabby() {
+  gdk.ThreadsInit()
+  inotify_init()  
+  
 	lang_man := gtk.SourceLanguageManagerGetDefault()
 	lang := lang_man.GetLanguage("go")
 	if nil == lang.SourceLanguage {
@@ -76,10 +78,6 @@ func init_tabby() {
 	tree_view.ModifyFontEasy("Regular 8")
 	tree_model = tree_store.ToTreeModel()
 	tree_view.SetModel(tree_model)
-	//tree_view.AppendColumn(gtk.TreeViewColumnWithAttributes(
-	//	"", gtk.CellRendererPixbuf(), "pixbuf", 0))
-	//tree_view.AppendColumn(gtk.TreeViewColumnWithAttributes(
-	//	"", gtk.CellRendererText(), "text", 0))
 	tree_view.SetHeadersVisible(false)
 	tree_view.Connect("cursor-changed", tree_view_select_cb, nil)
 
@@ -175,6 +173,12 @@ func init_tabby() {
 	navigation_submenu.Append(find_item)
 	find_item.Connect("activate", find_cb, nil)
 	find_item.AddAccelerator("activate", accel_group, gdk.GDK_f,
+		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
+		
+	replace_item := gtk.MenuItemWithMnemonic("Find and Replace")
+	navigation_submenu.Append(replace_item)
+	replace_item.Connect("activate", find_cb, nil)
+	replace_item.AddAccelerator("activate", accel_group, gdk.GDK_r,
 		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
 
 	prev_file_item := gtk.MenuItemWithMnemonic("Prev File")

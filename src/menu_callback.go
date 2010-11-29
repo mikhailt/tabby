@@ -54,9 +54,10 @@ func save_cb() {
 		}
 		file_save_current()
 		rec, _ := file_map[cur_file]
-		nbytes, _ := file.WriteString(string(rec.buf))
+		nbytes, err := file.WriteString(string(rec.buf))
 		if nbytes != len(rec.buf) {
-			bump_message("Error while writing to file: " + cur_file)
+			bump_message("Error while writing to file: " + cur_file) 
+			println("nbytes = ", nbytes, " errno = ", err)
 			return
 		}
 		file.Truncate(int64(nbytes))

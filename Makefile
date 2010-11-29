@@ -8,7 +8,8 @@ GOFILES=\
 	src/menu_callback.go\
 	src/tree_view.go\
 	src/session.go\
-	src/navigation.go
+	src/navigation.go\
+	src/inotify.go
 
 fix_style:
 	cp ./go.lang /usr/share/gtksourceview-2.0/language-specs/
