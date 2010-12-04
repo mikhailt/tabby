@@ -89,10 +89,10 @@ import "gtk"
 
 func NewFileTree() *gtk.GtkTreeView {
 	return &gtk.GtkTreeView{gtk.GtkContainer{gtk.GtkWidget{
-		gtk.ToGtkWidget(C.create_tabby_file_tree())}}}
+		gtk.FromNative(C.create_tabby_file_tree())}}}
 }
 
 func NewSearchTree() *gtk.GtkTreeView {
 	return &gtk.GtkTreeView{gtk.GtkContainer{gtk.GtkWidget{
-		gtk.ToGtkWidget(C.create_tabby_search_tree())}}}
+		gtk.FromNative(C.create_tabby_search_tree())}}}
 }

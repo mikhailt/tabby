@@ -143,6 +143,9 @@ func open_dir(dir *os.File, dir_name string, recursively bool) {
 	names, _ := dir.Readdirnames(-1)
 	for _, name := range names {
 		abs_name := dir_name + "/" + name
+		if name_is_ignored(abs_name) {
+		  continue
+		}
 		fi, _ := os.Lstat(abs_name)
 		if nil == fi {
 			continue

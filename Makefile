@@ -1,5 +1,7 @@
 include $(GOROOT)/src/Make.inc
 
+.DEFAULT_GOAL=all
+
 TARG=tabby
 GOFILES=\
 	src/main.go\
@@ -19,6 +21,7 @@ build_file_tree:
 	cd ./file_tree && gomake install
 
 all:
+	cp ./.tabbyignore ~/
 	make build_file_tree
 	make fix_style
 	make tabby

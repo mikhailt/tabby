@@ -84,6 +84,9 @@ func file_switch_to(name string) {
 }
 
 func file_stack_push(name string) {
+	if name == file_stack_at_top() {
+		return
+	}
 	file_stack[file_stack_top] = name
 	if file_stack_top == file_stack_max {
 		stack_next(&file_stack_max)
@@ -311,4 +314,10 @@ func prev_file_cb() {
 	// Popping out cur_file pushed in file_save_current.
 	file_stack_pop()
 	file_switch_to(file_stack_pop())
+}
+
+func file_stack_at_top() string {
+	t := file_stack_top
+	stack_prev(&t)
+	return file_stack[t]
 }

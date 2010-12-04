@@ -72,6 +72,7 @@ func inotify_observe() {
 			continue
 		}
 		gdk.ThreadsEnter()
+		file_save_current()
 		reload := inotify_dialog(collect)
 		for name, _ := range collect {
 			rec, rec_found := file_map[name]
