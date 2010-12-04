@@ -18,9 +18,13 @@ fix_style:
 build_file_tree:
 	cd ./file_tree && gomake install
 
-all: ./src/* ./file_tree/*
+all:
 	make build_file_tree
 	make fix_style
 	make tabby
+
+c:
+	gomake clean
+	cd ./file_tree && gomake clean
 
 include $(GOROOT)/src/Make.cmd

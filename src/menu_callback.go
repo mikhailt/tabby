@@ -47,6 +47,8 @@ func save_cb() {
 	if "" == cur_file {
 		save_as_cb()
 	} else {
+		inotify_rm_watch(cur_file)
+		defer inotify_add_watch(cur_file)
 		file, _ := os.Open(cur_file, os.O_CREAT|os.O_WRONLY, 0644)
 		if nil == file {
 			bump_message("Unable to open file for writing: " + cur_file)
@@ -56,7 +58,7 @@ func save_cb() {
 		rec, _ := file_map[cur_file]
 		nbytes, err := file.WriteString(string(rec.buf))
 		if nbytes != len(rec.buf) {
-			bump_message("Error while writing to file: " + cur_file) 
+			bump_message("Error while writing to file: " + cur_file)
 			println("nbytes = ", nbytes, " errno = ", err)
 			return
 		}
@@ -107,26 +109,25 @@ func paste_done_cb() {
 	selection_flag = false
 }
 
+// Reads file content to newly allocated buffer.
 func open_file_read_to_buf(name string, verbose bool) (bool, []byte) {
 	file, _ := os.Open(name, os.O_RDONLY, 0644)
 	if nil == file {
 		bump_message("Unable to open file for reading: " + name)
 		return false, nil
 	}
+	defer file.Close()
 	stat, _ := file.Stat()
 	if nil == stat {
 		bump_message("Unable to stat file: " + name)
-		file.Close()
 		return false, nil
 	}
 	buf := make([]byte, stat.Size)
 	nread, _ := file.Read(buf)
 	if nread != int(stat.Size) {
 		bump_message("Unable to read whole file: " + name)
-		file.Close()
 		return false, nil
 	}
-	file.Close()
 	if nread > 0 {
 		if false == glib.Utf8Validate(buf, nread, nil) {
 			if verbose {

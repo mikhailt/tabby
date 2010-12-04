@@ -57,9 +57,9 @@ func bump_message(m string) {
 }
 
 func init_tabby() {
-  gdk.ThreadsInit()
-  inotify_init()  
-  
+	gdk.ThreadsInit()
+	inotify_init()
+
 	lang_man := gtk.SourceLanguageManagerGetDefault()
 	lang := lang_man.GetLanguage("go")
 	if nil == lang.SourceLanguage {
@@ -174,7 +174,7 @@ func init_tabby() {
 	find_item.Connect("activate", find_cb, nil)
 	find_item.AddAccelerator("activate", accel_group, gdk.GDK_f,
 		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
-		
+
 	replace_item := gtk.MenuItemWithMnemonic("Find and Replace")
 	navigation_submenu.Append(replace_item)
 	replace_item.Connect("activate", find_cb, nil)
