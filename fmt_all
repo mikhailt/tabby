@@ -1,3 +1,4 @@
+
 gofmt src/main.go > main.go
 gofmt src/menu_callback.go > menu_callback.go
 gofmt src/file_tree.go > file_tree.go
