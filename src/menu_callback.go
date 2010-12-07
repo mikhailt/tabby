@@ -198,3 +198,8 @@ func file_chooser_dialog(t int) (bool, string) {
 	}
 	return false, ""
 }
+
+func toggle_searchview(current bool){
+  search_window.SetVisible(current)
+  opt.showSearch=current
+}

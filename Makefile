@@ -11,7 +11,8 @@ GOFILES=\
 	src/tree_view.go\
 	src/session.go\
 	src/navigation.go\
-	src/inotify.go
+	src/inotify.go\
+	src/options.go
 
 fix_style:
 	cp ./go.lang /usr/share/gtksourceview-2.0/language-specs/

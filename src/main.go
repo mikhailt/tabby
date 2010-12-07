@@ -103,7 +103,7 @@ func init_tabby() {
 	source_view.SetDrawSpaces(gtk.GTK_SOURCE_DRAW_SPACES_TAB)
 	source_view.SetTabWidth(2)
 	source_view.SetSmartHomeEnd(gtk.GTK_SOURCE_SMART_HOME_END_ALWAYS)
-	source_view.SetSizeRequest(700, 0)
+	source_view.SetSizeRequest(550, 200)
 	source_view.SetWrapMode(gtk.GTK_WRAP_WORD)
 
 	vbox := gtk.VBox(false, 0)
@@ -193,13 +193,25 @@ func init_tabby() {
 	next_file_item.AddAccelerator("activate", accel_group, gdk.GDK_F8,
 		0, gtk.GTK_ACCEL_VISIBLE)
 
+	view_item := gtk.MenuItemWithMnemonic("_View")
+	menubar.Append(view_item)
+	view_submenu := gtk.Menu()
+	view_item.SetSubmenu(view_submenu)
+
+	search_chkitem := gtk.CheckMenuItemWithMnemonic("_Searchview")
+	view_submenu.Append(search_chkitem)
+	search_chkitem.SetActive(opt.showSearch)
+	search_chkitem.Connect("toggled", func(){toggle_searchview(search_chkitem.GetActive())}, nil)
+	search_chkitem.AddAccelerator("toggled", accel_group, gdk.GDK_s,
+		gdk.GDK_MOD1_MASK, gtk.GTK_ACCEL_VISIBLE)
+
 	tree_window := gtk.ScrolledWindow(nil, nil)
-	tree_window.SetSizeRequest(330, 0)
+	tree_window.SetSizeRequest(200, 0)
 	tree_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
 	inner_hpaned.Add1(tree_window)
 	tree_window.Add(tree_view)
 
-	search_window := gtk.ScrolledWindow(nil, nil)
+	search_window = gtk.ScrolledWindow(nil, nil)
 	search_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
 	outer_hpaned.Add2(search_window)
 	search_window.Add(search_view)
@@ -217,6 +229,7 @@ func init_tabby() {
 	// init_tabby blocks for some reason if called after ShowAll.
 	init_vars()
 	main_window.ShowAll()
+	search_window.SetVisible(opt.showSearch)
 	// Cannot be called before ShowAll. This is also not clear.
 	file_switch_to(file_stack_pop())
 	stack_prev(&file_stack_max)
@@ -232,6 +245,8 @@ func init_vars() {
 }
 
 func main() {
+	loadOptions()
+	defer saveOptions()
 	gtk.Init(nil)
 	init_tabby()
 	gtk.Main()
