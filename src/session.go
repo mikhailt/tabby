@@ -60,7 +60,7 @@ func session_restore() {
 }
 
 func take_reader_from_file(name string) (*bufio.Reader, *os.File) {
-	file, _ := os.Open(name, os.O_RDONLY, 0644)
+	file, _ := os.Open(name, os.O_CREAT|os.O_RDONLY, 0644)
 	if nil == file {
 		println("tabby: unable to Open file for reading: ", name)
 		return nil, nil
