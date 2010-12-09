@@ -4,7 +4,7 @@ import (
 	"os"
 	"io"
 	"bytes"
-	"gtk"
+  	"gtk"
 )
 
 func gofmt_all() {
@@ -35,7 +35,7 @@ func gofmt(file string) {
 	}
 	if len(error) == 0 {
 		if file == cur_file {
-			if string(rec.buf) != string(std) {
+			if string(buf) != string(std) {
 				var be, en gtk.GtkTextIter
 				source_buf.GetSelectionBounds(&be, &en)
 				sel_be := be.GetOffset()
@@ -46,17 +46,14 @@ func gofmt(file string) {
 		} else if string(rec.buf) != string(std) {
 			rec.buf = std
 			rec.modified = true
-			real_cur_file := cur_file
-			cur_file = file
-			tree_view_set_cur_iter(false)
-			if tree_store.IterIsValid(&cur_iter) {
+			/*var my_iter *gtk.GtkTreeIter
+			my_iter = tree_view_set_name_iter(file, true)
+			if tree_store.IterIsValid(my_iter) {
 				var val gtk.GValue
-				tree_model.GetValue(&cur_iter, 0, &val)
-				tree_store.Set(&cur_iter, string('C')+val.GetString()[1:])
+				tree_model.GetValue(my_iter, 0, &val)
+				tree_store.Set(my_iter, string('C')+val.GetString()[1:])
 			}
-			tree_view_set_cur_iter(false)
-			cur_file = real_cur_file
-			tree_view_set_cur_iter(true)
+			tree_view_set_name_iter(file, false)*/
 		}
 	}
 }

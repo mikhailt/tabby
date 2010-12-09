@@ -27,7 +27,7 @@ var cur_file string
 var cur_iter gtk.GtkTreeIter
 
 func refresh_title() {
-	if "" == cur_file {
+     	if "" == cur_file {
 		main_window.SetTitle("*")
 		return
 	}
