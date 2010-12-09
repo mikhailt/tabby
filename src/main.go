@@ -24,10 +24,10 @@ var search_model *gtk.GtkTreeModel
 var search_window *gtk.GtkScrolledWindow
 
 var cur_file string
-var cur_iter gtk.GtkTreeIter
+var cur_iter *gtk.GtkTreeIter
 
 func refresh_title() {
-     	if "" == cur_file {
+	if "" == cur_file {
 		main_window.SetTitle("*")
 		return
 	}
@@ -39,10 +39,10 @@ func refresh_title() {
 		main_window.SetTitle(cur_file)
 		icon = 'B'
 	}
-	if tree_store.IterIsValid(&cur_iter) {
+	if tree_store.IterIsValid(cur_iter) {
 		var val gtk.GValue
-		tree_model.GetValue(&cur_iter, 0, &val)
-		tree_store.Set(&cur_iter, string(icon)+val.GetString()[1:])
+		tree_model.GetValue(cur_iter, 0, &val)
+		tree_store.Set(cur_iter, string(icon)+val.GetString()[1:])
 	}
 }
 

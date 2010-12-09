@@ -4,7 +4,7 @@ import (
 	"os"
 	"io"
 	"bytes"
-  	"gtk"
+	"gtk"
 )
 
 func gofmt_all() {
@@ -46,14 +46,13 @@ func gofmt(file string) {
 		} else if string(rec.buf) != string(std) {
 			rec.buf = std
 			rec.modified = true
-			/*var my_iter *gtk.GtkTreeIter
-			my_iter = tree_view_set_name_iter(file, true)
+			my_iter := tree_view_set_name_iter(file, false)
 			if tree_store.IterIsValid(my_iter) {
 				var val gtk.GValue
 				tree_model.GetValue(my_iter, 0, &val)
 				tree_store.Set(my_iter, string('C')+val.GetString()[1:])
 			}
-			tree_view_set_name_iter(file, false)*/
+			//tree_view_set_name_iter(file, false)
 		}
 	}
 }
