@@ -194,7 +194,7 @@ func prev_instance_cb() {
 		return
 	}
 	// find_prev_instance cannot return false because selection is not empty.
-	find_prev_instance(&en, &be, &en, selection)
+	find_prev_instance(&be, &be, &en, selection)
 	move_focus_and_selection(&be, &en)
 }
 
