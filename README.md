@@ -13,10 +13,10 @@ SCREENSHOT:
 
 INSTALL:
 --------
-Install & run:
-make install
-tabby
+  Install & run:
+    make install
+    tabby
 
-Compile & run:
-make tabby
-./tabby
+  Compile & run:
+    make tabby
+    ./tabby
