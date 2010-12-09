@@ -10,6 +10,10 @@ var main_window *gtk.GtkWindow
 var source_buf *gtk.GtkSourceBuffer
 var source_view *gtk.GtkSourceView
 
+var error_buf *gtk.GtkTextBuffer
+var error_view *gtk.GtkTextView
+var error_window *gtk.GtkScrolledWindow
+
 var tree_view *gtk.GtkTreeView
 var tree_store *gtk.GtkTreeStore
 var tree_model *gtk.GtkTreeModel
@@ -17,6 +21,7 @@ var tree_model *gtk.GtkTreeModel
 var search_view *gtk.GtkTreeView
 var search_store *gtk.GtkTreeStore
 var search_model *gtk.GtkTreeModel
+var search_window *gtk.GtkScrolledWindow
 
 var cur_file string
 var cur_iter gtk.GtkTreeIter
@@ -91,6 +96,11 @@ func init_tabby() {
 	search_view.SetHeadersVisible(false)
 	search_view.Connect("cursor-changed", search_view_select_cb, nil)
 
+	error_view = gtk.TextView()
+	error_view.ModifyFontEasy("Monospace Regular 10")
+	error_view.SetEditable(false)
+	error_buf = error_view.GetBuffer()
+
 	source_view = gtk.SourceViewWithBuffer(source_buf)
 	source_view.ModifyFontEasy("Monospace Regular 10")
 	source_view.SetAutoIndent(true)
@@ -99,17 +109,18 @@ func init_tabby() {
 	source_view.SetRightMarginPosition(80)
 	source_view.SetShowRightMargin(true)
 	source_view.SetIndentWidth(2)
-	source_view.SetInsertSpacesInsteadOfTabs(true)
+	source_view.SetInsertSpacesInsteadOfTabs(opt.spaceNotTab)
 	source_view.SetDrawSpaces(gtk.GTK_SOURCE_DRAW_SPACES_TAB)
 	source_view.SetTabWidth(2)
 	source_view.SetSmartHomeEnd(gtk.GTK_SOURCE_SMART_HOME_END_ALWAYS)
-	source_view.SetSizeRequest(550, 200)
 	source_view.SetWrapMode(gtk.GTK_WRAP_WORD)
 
 	vbox := gtk.VBox(false, 0)
 	inner_hpaned := gtk.HPaned()
+	view_vpaned := gtk.VPaned()
 	outer_hpaned := gtk.HPaned()
 	outer_hpaned.Add1(inner_hpaned)
+	inner_hpaned.Add2(view_vpaned)
 
 	menubar := gtk.MenuBar()
 	vbox.PackStart(menubar, false, false, 0)
@@ -163,6 +174,12 @@ func init_tabby() {
 	navigation_submenu := gtk.Menu()
 	navigation_item.SetSubmenu(navigation_submenu)
 
+	prev_instance_item := gtk.MenuItemWithMnemonic("_Previous Instance")
+	navigation_submenu.Append(prev_instance_item)
+	prev_instance_item.Connect("activate", prev_instance_cb, nil)
+	prev_instance_item.AddAccelerator("activate", accel_group, gdk.GDK_F3,
+		gdk.GDK_SHIFT_MASK, gtk.GTK_ACCEL_VISIBLE)
+
 	next_instance_item := gtk.MenuItemWithMnemonic("_Next Instance")
 	navigation_submenu.Append(next_instance_item)
 	next_instance_item.Connect("activate", next_instance_cb, nil)
@@ -193,20 +210,44 @@ func init_tabby() {
 	next_file_item.AddAccelerator("activate", accel_group, gdk.GDK_F8,
 		0, gtk.GTK_ACCEL_VISIBLE)
 
+	tools_item := gtk.MenuItemWithMnemonic("_Tools")
+	menubar.Append(tools_item)
+	tools_submenu := gtk.Menu()
+	tools_item.SetSubmenu(tools_submenu)
+
+	gofmt_item := gtk.MenuItemWithMnemonic("_Gofmt")
+	tools_submenu.Append(gofmt_item)
+	gofmt_item.Connect("activate", gofmt_cb, nil)
+	gofmt_item.AddAccelerator("activate", accel_group, gdk.GDK_F9,
+		0, gtk.GTK_ACCEL_VISIBLE)
+
+	gofmtAll_item := gtk.MenuItemWithMnemonic("Gofmt _All")
+	tools_submenu.Append(gofmtAll_item)
+	gofmtAll_item.Connect("activate", gofmt_all, nil)
+	gofmtAll_item.AddAccelerator("activate", accel_group, gdk.GDK_F9,
+		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
+
 	view_item := gtk.MenuItemWithMnemonic("_View")
 	menubar.Append(view_item)
 	view_submenu := gtk.Menu()
 	view_item.SetSubmenu(view_submenu)
 
-	search_chkitem := gtk.CheckMenuItemWithMnemonic("_Searchview")
+	search_chkitem := gtk.CheckMenuItemWithMnemonic("Show _Searchview")
 	view_submenu.Append(search_chkitem)
 	search_chkitem.SetActive(opt.showSearch)
-	search_chkitem.Connect("toggled", func(){toggle_searchview(search_chkitem.GetActive())}, nil)
-	search_chkitem.AddAccelerator("toggled", accel_group, gdk.GDK_s,
-		gdk.GDK_MOD1_MASK, gtk.GTK_ACCEL_VISIBLE)
+	search_chkitem.Connect("toggled", func() { search_chk_cb(search_chkitem.GetActive()) }, nil)
+
+	error_chkitem := gtk.CheckMenuItemWithMnemonic("Show _Errorview")
+	view_submenu.Append(error_chkitem)
+	error_chkitem.SetActive(opt.showError)
+	error_chkitem.Connect("toggled", func() { error_chk_cb(error_chkitem.GetActive()) }, nil)
+
+	notab_chkitem := gtk.CheckMenuItemWithMnemonic("Spaces for _Tabs")
+	view_submenu.Append(notab_chkitem)
+	notab_chkitem.SetActive(opt.spaceNotTab)
+	notab_chkitem.Connect("toggled", func() { notab_chk_cb(notab_chkitem.GetActive()) }, nil)
 
 	tree_window := gtk.ScrolledWindow(nil, nil)
-	tree_window.SetSizeRequest(200, 0)
 	tree_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
 	inner_hpaned.Add1(tree_window)
 	tree_window.Add(tree_view)
@@ -218,18 +259,34 @@ func init_tabby() {
 
 	text_window := gtk.ScrolledWindow(nil, nil)
 	text_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_ALWAYS)
-	inner_hpaned.Add2(text_window)
+	view_vpaned.Add1(text_window)
 	text_window.Add(source_view)
+
+	error_window = gtk.ScrolledWindow(nil, nil)
+	error_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_ALWAYS)
+	view_vpaned.Add2(error_window)
+	error_window.Add(error_view)
+
+	inner_hpaned.Connect("size_request", func() { ohp_cb(outer_hpaned.GetPosition()) }, nil)
+	view_vpaned.Connect("size_request", func() { ihp_cb(inner_hpaned.GetPosition()) }, nil)
+	source_view.Connect("size_request", func() { vvp_cb(view_vpaned.GetPosition()) }, nil)
+	outer_hpaned.SetPosition(opt.ohpPosition)
+	inner_hpaned.SetPosition(opt.ihpPosition)
+	view_vpaned.SetPosition(opt.vvpPosition)
 
 	main_window = gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
 	main_window.AddAccelGroup(accel_group)
-	main_window.Maximize()
+	main_window.SetSizeRequest(400, 200) //minimum size
+	main_window.Resize(opt.windowWidth, opt.windowHeight)
+	main_window.Move(opt.windowX, opt.windowY)
 	main_window.Connect("destroy", exit_cb, "")
+	main_window.Connect("configure-event", WindowEvent_cb, "")
 	main_window.Add(vbox)
 	// init_tabby blocks for some reason if called after ShowAll.
 	init_vars()
 	main_window.ShowAll()
 	search_window.SetVisible(opt.showSearch)
+	error_window.SetVisible(opt.showError)
 	// Cannot be called before ShowAll. This is also not clear.
 	file_switch_to(file_stack_pop())
 	stack_prev(&file_stack_max)

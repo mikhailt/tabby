@@ -23,19 +23,22 @@ var prev_pattern string = ""
 
 var accel_group *gtk.GtkAccelGroup = nil
 
+func get_source() string {
+	var be, en gtk.GtkTextIter
+	source_buf.GetStartIter(&be)
+	source_buf.GetEndIter(&en)
+	return source_buf.GetText(&be, &en, true)
+}
 func file_save_current() {
 	if "" == cur_file {
 		return
 	}
 	var be, en gtk.GtkTextIter
-	source_buf.GetStartIter(&be)
-	source_buf.GetEndIter(&en)
-	text_to_save := source_buf.GetText(&be, &en, true)
 	rec, found := file_map[cur_file]
 	if false == found {
 		rec = new(FileRecord)
 	}
-	rec.buf = ([]byte)(text_to_save)
+	rec.buf = ([]byte)(get_source())
 	rec.modified = source_buf.GetModified()
 	source_buf.GetSelectionBounds(&be, &en)
 	rec.sel_be = be.GetOffset()
@@ -173,6 +176,25 @@ func next_instance_cb() {
 	}
 	// find_next_instance cannot return false because selection is not empty.
 	find_next_instance(&en, &be, &en, selection)
+	move_focus_and_selection(&be, &en)
+}
+func find_prev_instance(start, be, en *gtk.GtkTextIter, pattern string) bool {
+	if start.BackwardSearch(pattern, 0, be, en, nil) {
+		return true
+	}
+	source_buf.GetStartIter(be)
+	return be.BackwardSearch(pattern, 0, be, en, nil)
+}
+
+func prev_instance_cb() {
+	var be, en gtk.GtkTextIter
+	source_buf.GetSelectionBounds(&be, &en)
+	selection := source_buf.GetSlice(&be, &en, false)
+	if "" == selection {
+		return
+	}
+	// find_prev_instance cannot return false because selection is not empty.
+	find_prev_instance(&en, &be, &en, selection)
 	move_focus_and_selection(&be, &en)
 }
 

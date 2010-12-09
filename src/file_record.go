@@ -2,6 +2,7 @@ package main
 
 type FileRecord struct {
 	buf      []byte
+	error    []byte
 	modified bool
 	sel_be   int
 	sel_en   int

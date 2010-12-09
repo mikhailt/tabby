@@ -12,9 +12,9 @@ var ignore IgnoreMap
 
 func name_is_ignored(name string) bool {
 	for _, re := range ignore {
-	  if nil == re {
-	    continue
-	  }
+		if nil == re {
+			continue
+		}
 		if re.Match([]byte(name)) {
 			return true
 		}

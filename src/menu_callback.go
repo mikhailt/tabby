@@ -4,13 +4,18 @@ import (
 	"glib"
 	"gtk"
 	"os"
+	"strconv"
 )
 
 var prev_dir string
 
 func new_cb() {
 	file_save_current()
-	file_switch_to("")
+	var i int
+	for i = 0; !add_file_record(strconv.Itoa(i), []byte{}, true); i++ {
+	}
+	file_tree_store()
+	file_switch_to(strconv.Itoa(i))
 }
 
 func open_cb() {
@@ -46,6 +51,8 @@ func open_rec_cb() {
 func save_cb() {
 	if "" == cur_file {
 		save_as_cb()
+	} else if cur_file[0] != '/' {
+		save_as_cb()
 	} else {
 		inotify_rm_watch(cur_file)
 		defer inotify_add_watch(cur_file)
@@ -79,9 +86,14 @@ func save_as_cb() {
 	source_buf.GetStartIter(&be)
 	source_buf.GetEndIter(&en)
 	text_to_save := source_buf.GetText(&be, &en, true)
+	if cur_file != "" {
+		if cur_file[0] != '/' {
+			close_cb()
+		}
+	}
 	add_file_record(dialog_file, []byte(text_to_save), true)
 	file_tree_store()
-	cur_file = dialog_file
+	file_switch_to(dialog_file)
 	save_cb()
 	tree_view_set_cur_iter(true)
 }
@@ -144,7 +156,7 @@ func open_dir(dir *os.File, dir_name string, recursively bool) {
 	for _, name := range names {
 		abs_name := dir_name + "/" + name
 		if name_is_ignored(abs_name) {
-		  continue
+			continue
 		}
 		fi, _ := os.Lstat(abs_name)
 		if nil == fi {
@@ -199,7 +211,21 @@ func file_chooser_dialog(t int) (bool, string) {
 	return false, ""
 }
 
-func toggle_searchview(current bool){
-  search_window.SetVisible(current)
-  opt.showSearch=current
+func error_chk_cb(current bool) {
+	error_window.SetVisible(current)
+	opt.showError = current
+}
+
+func search_chk_cb(current bool) {
+	search_window.SetVisible(current)
+	opt.showSearch = current
+}
+
+func notab_chk_cb(current bool) {
+	opt.spaceNotTab = current
+	source_view.SetInsertSpacesInsteadOfTabs(opt.spaceNotTab)
+}
+
+func gofmt_cb() {
+	gofmt(cur_file)
 }
