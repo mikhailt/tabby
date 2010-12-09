@@ -9,7 +9,7 @@ WHATS:
 SCREENSHOT:
 -----------
 
-![Go GTK!](https://github.com/Nazgand/tabby/raw/gh-pages/images/snapshot.png "tabby!")
+![tabby!](https://github.com/Nazgand/tabby/raw/gh-pages/snapshot.png "tabby!")
 
 INSTALL:
 --------
