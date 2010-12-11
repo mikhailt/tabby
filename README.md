@@ -29,8 +29,8 @@ LICENSE:
 AUTHORS:
 --------
 
-  * mikhailt
-  * Mark Andrew Gerads
+  * mikhailt (Mikhail Trushnikov)
+  * nazgand  (Mark Andrew Gerads)
 
 GOAL:
 -----
