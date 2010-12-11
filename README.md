@@ -6,7 +6,7 @@ tabby
 SCREENSHOT:
 -----------
 
-![tabby!](https://github.com/Nazgand/tabby/raw/gh-pages/snapshot.png "tabby!")
+![tabby!](https://github.com/mikhailt/tabby/raw/gh-pages/tabby.png "tabby!")
 
 INSTALL:
 --------
