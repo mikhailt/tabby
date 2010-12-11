@@ -177,8 +177,8 @@ func init_tabby() {
 	prev_instance_item := gtk.MenuItemWithMnemonic("_Previous Instance")
 	navigation_submenu.Append(prev_instance_item)
 	prev_instance_item.Connect("activate", prev_instance_cb, nil)
-	prev_instance_item.AddAccelerator("activate", accel_group, gdk.GDK_F3,
-		gdk.GDK_SHIFT_MASK, gtk.GTK_ACCEL_VISIBLE)
+	prev_instance_item.AddAccelerator("activate", accel_group, gdk.GDK_F2,
+		0, gtk.GTK_ACCEL_VISIBLE)
 
 	next_instance_item := gtk.MenuItemWithMnemonic("_Next Instance")
 	navigation_submenu.Append(next_instance_item)

@@ -182,7 +182,7 @@ func find_prev_instance(start, be, en *gtk.GtkTextIter, pattern string) bool {
 	if start.BackwardSearch(pattern, 0, be, en, nil) {
 		return true
 	}
-	source_buf.GetStartIter(be)
+	source_buf.GetEndIter(be)
 	return be.BackwardSearch(pattern, 0, be, en, nil)
 }
 
