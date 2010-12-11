@@ -9,12 +9,14 @@ import (
 
 func gofmt_all() {
 	for file, _ := range file_map {
-		go gofmt(file)
+		gofmt(file)
 	}
 	if cur_file == "" {
 		gofmt("")
 	}
+	file_tree_store()
 }
+
 func gofmt(file string) {
 	rec, _ := file_map[file]
 	var buf []byte
@@ -23,7 +25,7 @@ func gofmt(file string) {
 	} else {
 		buf = rec.buf
 	}
-	std, error, e := getOutput([]string{os.Getenv("GOBIN") + "/gofmt"}, buf)
+	std, error, e := get_output([]string{os.Getenv("GOBIN") + "/gofmt"}, buf)
 	if e != nil {
 		println(e.String())
 		return
@@ -33,30 +35,24 @@ func gofmt(file string) {
 	} else {
 		rec.error = error
 	}
-	if len(error) == 0 {
-		if file == cur_file {
-			if string(buf) != string(std) {
-				var be, en gtk.GtkTextIter
-				source_buf.GetSelectionBounds(&be, &en)
-				sel_be := be.GetOffset()
-				source_buf.SetText(string(std))
-				source_buf.GetIterAtOffset(&be, sel_be)
-				move_focus_and_selection(&be, &be)
-			}
-		} else if string(rec.buf) != string(std) {
-			rec.buf = std
-			rec.modified = true
-			my_iter := tree_view_set_name_iter(file, false)
-			if tree_store.IterIsValid(my_iter) {
-				var val gtk.GValue
-				tree_model.GetValue(my_iter, 0, &val)
-				tree_store.Set(my_iter, string('C')+val.GetString()[1:])
-			}
-			//tree_view_set_name_iter(file, false)
+	if 0 != len(error) {
+		return
+	}
+	if file == cur_file {
+		if string(buf) != string(std) {
+			var be, en gtk.GtkTextIter
+			source_buf.GetSelectionBounds(&be, &en)
+			sel_be := be.GetOffset()
+			source_buf.SetText(string(std))
+			source_buf.GetIterAtOffset(&be, sel_be)
+			move_focus_and_selection(&be, &be)
 		}
+	} else if string(rec.buf) != string(std) {
+		rec.buf = std
+		rec.modified = true
 	}
 }
-func getOutput(args []string, input []byte) (std []byte, error []byte, e os.Error) {
+func get_output(args []string, input []byte) (std []byte, error []byte, e os.Error) {
 	inpr, inpw, err := os.Pipe()
 	if err != nil {
 		return nil, nil, err

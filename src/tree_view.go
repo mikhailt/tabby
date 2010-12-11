@@ -61,35 +61,29 @@ func tree_view_set_cur_iter(mark bool) {
 	if "" == cur_file {
 		return
 	}
-	cur_iter = tree_view_set_name_iter(cur_file, mark)
-}
-
-// Sets cur_iter pointing to tree_store node corresponding to current file.
-// Requires properly set cur_file.
-func tree_view_set_name_iter(name string, mark bool) *gtk.GtkTreeIter {
-	var file_iter, parent gtk.GtkTreeIter
-	tree_model.GetIterFirst(&file_iter)
+	var parent gtk.GtkTreeIter
+	name := cur_file
+	tree_model.GetIterFirst(&cur_iter)
 	for {
 		var val gtk.GValue
-		tree_model.GetValue(&file_iter, 0, &val)
+		tree_model.GetValue(&cur_iter, 0, &val)
 		whole_string := val.GetString()
 		cur_str := whole_string[1:]
 		pos := slashed_prefix(name, cur_str)
 		if pos > 0 {
 			if mark {
-				tree_store.Set(&file_iter, strings.ToUpper(whole_string[:1])+cur_str)
+				tree_store.Set(&cur_iter, strings.ToUpper(whole_string[:1])+cur_str)
 			} else {
-				tree_store.Set(&file_iter, strings.ToLower(whole_string[:1])+cur_str)
+				tree_store.Set(&cur_iter, strings.ToLower(whole_string[:1])+cur_str)
 			}
 			if pos == len(name) {
 				break
 			}
-			parent.Assign(&file_iter)
-			tree_model.IterChildren(&file_iter, &parent)
+			parent.Assign(&cur_iter)
+			tree_model.IterChildren(&cur_iter, &parent)
 			name = name[pos:]
 		} else {
-			tree_model.IterNext(&file_iter)
+			tree_model.IterNext(&cur_iter)
 		}
 	}
-	return &file_iter
 }

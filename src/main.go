@@ -24,7 +24,7 @@ var search_model *gtk.GtkTreeModel
 var search_window *gtk.GtkScrolledWindow
 
 var cur_file string
-var cur_iter *gtk.GtkTreeIter
+var cur_iter gtk.GtkTreeIter
 
 func refresh_title() {
 	if "" == cur_file {
@@ -39,10 +39,10 @@ func refresh_title() {
 		main_window.SetTitle(cur_file)
 		icon = 'B'
 	}
-	if tree_store.IterIsValid(cur_iter) {
+	if tree_store.IterIsValid(&cur_iter) {
 		var val gtk.GValue
-		tree_model.GetValue(cur_iter, 0, &val)
-		tree_store.Set(cur_iter, string(icon)+val.GetString()[1:])
+		tree_model.GetValue(&cur_iter, 0, &val)
+		tree_store.Set(&cur_iter, string(icon)+val.GetString()[1:])
 	}
 }
 
@@ -97,7 +97,7 @@ func init_tabby() {
 	search_view.Connect("cursor-changed", search_view_select_cb, nil)
 
 	error_view = gtk.TextView()
-	error_view.ModifyFontEasy("Monospace Regular 10")
+	error_view.ModifyFontEasy("Monospace Regular 8")
 	error_view.SetEditable(false)
 	error_buf = error_view.GetBuffer()
 
@@ -280,7 +280,7 @@ func init_tabby() {
 	main_window.Resize(opt.windowWidth, opt.windowHeight)
 	main_window.Move(opt.windowX, opt.windowY)
 	main_window.Connect("destroy", exit_cb, "")
-	main_window.Connect("configure-event", WindowEvent_cb, "")
+	main_window.Connect("configure-event", window_event_cb, "")
 	main_window.Add(vbox)
 	// init_tabby blocks for some reason if called after ShowAll.
 	init_vars()
@@ -302,8 +302,8 @@ func init_vars() {
 }
 
 func main() {
-	loadOptions()
-	defer saveOptions()
+	load_options()
+	defer save_options()
 	gtk.Init(nil)
 	init_tabby()
 	gtk.Main()

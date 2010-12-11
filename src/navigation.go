@@ -306,10 +306,10 @@ func tree_view_scroll_to_cur_iter() {
 	if "" == cur_file {
 		return
 	}
-	if false == tree_store.IterIsValid(cur_iter) {
+	if false == tree_store.IterIsValid(&cur_iter) {
 		return
 	}
-	path := tree_model.GetPath(cur_iter)
+	path := tree_model.GetPath(&cur_iter)
 	tree_view.ScrollToCell(path, nil, true, 0.5, 0)
 }
 

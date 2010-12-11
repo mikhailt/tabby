@@ -12,7 +12,7 @@ type Options struct {
 	windowWidth, windowHeight, windowX, windowY int
 }
 
-func newOptions() (o Options) {
+func new_options() (o Options) {
 	o.showSearch = true
 	o.showError = true
 	o.ihpPosition = 150
@@ -22,16 +22,18 @@ func newOptions() (o Options) {
 	o.windowX, o.windowY = 0, 0
 	return
 }
-func Atoi(s string) (i int) {
+
+func atoi(s string) (i int) {
 	i, _ = strconv.Atoi(s)
 	return
 }
-func loadOptions() {
+
+func load_options() {
 	reader, file := take_reader_from_file(os.Getenv("HOME") + "/.tabbyoptions")
 	defer file.Close()
 	var str string
 	for next_string_from_reader(reader, &str) {
-		args := strings.Split(compactSpace(str), "\t", -1)
+		args := strings.Split(compact_space(str), "\t", -1)
 		switch args[0] {
 		case "spaceNotTab":
 			opt.spaceNotTab, _ = strconv.Atob(args[1])
@@ -46,11 +48,12 @@ func loadOptions() {
 		case "vvpPosition":
 			opt.vvpPosition, _ = strconv.Atoi(args[1])
 		case "allocWindow":
-			opt.windowWidth, opt.windowHeight, opt.windowX, opt.windowY = Atoi(args[1]), Atoi(args[2]), Atoi(args[3]), Atoi(args[4])
+			opt.windowWidth, opt.windowHeight, opt.windowX, opt.windowY = atoi(args[1]),
+				atoi(args[2]), atoi(args[3]), atoi(args[4])
 		}
 	}
 }
-func saveOptions() {
+func save_options() {
 	file, _ := os.Open(os.Getenv("HOME")+"/.tabbyoptions", os.O_CREAT|os.O_WRONLY, 0644)
 	if nil == file {
 		println("tabby: unable to save options")
@@ -63,35 +66,43 @@ func saveOptions() {
 	file.WriteString("ihpPosition\t" + strconv.Itoa(opt.ihpPosition) + "\n")
 	file.WriteString("ohpPosition\t" + strconv.Itoa(opt.ohpPosition) + "\n")
 	file.WriteString("vvpPosition\t" + strconv.Itoa(opt.vvpPosition) + "\n")
-	file.WriteString("allocWindow\t" + strconv.Itoa(opt.windowWidth) + "\t" + strconv.Itoa(opt.windowHeight) + "\t" + strconv.Itoa(opt.windowX) + "\t" + strconv.Itoa(opt.windowY) + "\n")
+	file.WriteString("allocWindow\t" + strconv.Itoa(opt.windowWidth) + "\t" +
+		strconv.Itoa(opt.windowHeight) + "\t" + strconv.Itoa(opt.windowX) + "\t" +
+		strconv.Itoa(opt.windowY) + "\n")
 	file.Close()
 }
-func compactSpace(s string) string {
+
+func compact_space(s string) string {
 	s = strings.TrimSpace(s)
-	n := replaceSpace(s)
+	n := replace_space(s)
 	for n != s {
 		s = n
-		n = replaceSpace(s)
+		n = replace_space(s)
 	}
 	return s
 }
-func replaceSpace(s string) string {
-	return strings.Replace(strings.Replace(strings.Replace(s, "  ", " ", -1), "\t ", "\t", -1), " \t", "\t", -1)
+
+func replace_space(s string) string {
+	return strings.Replace(strings.Replace(strings.Replace(s, "  ", " ", -1),
+		"\t ", "\t", -1),
+		" \t", "\t", -1)
 }
 
-var opt Options = newOptions()
+var opt Options = new_options()
 
-//callbacks
-func WindowEvent_cb() {
+func window_event_cb() {
 	main_window.GetSize(&opt.windowWidth, &opt.windowHeight)
 	main_window.GetPosition(&opt.windowX, &opt.windowY)
 }
+
 func ohp_cb(pos int) {
 	opt.ohpPosition = pos
 }
+
 func ihp_cb(pos int) {
 	opt.ihpPosition = pos
 }
+
 func vvp_cb(pos int) {
 	opt.vvpPosition = pos
 }

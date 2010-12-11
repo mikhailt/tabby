@@ -4,18 +4,13 @@ import (
 	"glib"
 	"gtk"
 	"os"
-	"strconv"
 )
 
 var prev_dir string
 
 func new_cb() {
 	file_save_current()
-	var i int
-	for i = 0; !add_file_record(strconv.Itoa(i), []byte{}, true); i++ {
-	}
-	file_tree_store()
-	file_switch_to(strconv.Itoa(i))
+	file_switch_to("")
 }
 
 func open_cb() {
@@ -51,8 +46,6 @@ func open_rec_cb() {
 func save_cb() {
 	if "" == cur_file {
 		save_as_cb()
-	} else if cur_file[0] != '/' {
-		save_as_cb()
 	} else {
 		inotify_rm_watch(cur_file)
 		defer inotify_add_watch(cur_file)
@@ -86,11 +79,6 @@ func save_as_cb() {
 	source_buf.GetStartIter(&be)
 	source_buf.GetEndIter(&en)
 	text_to_save := source_buf.GetText(&be, &en, true)
-	if cur_file != "" {
-		if cur_file[0] != '/' {
-			close_cb()
-		}
-	}
 	add_file_record(dialog_file, []byte(text_to_save), true)
 	file_tree_store()
 	file_switch_to(dialog_file)
