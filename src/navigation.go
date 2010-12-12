@@ -30,6 +30,9 @@ func get_source() string {
 	return source_buf.GetText(&be, &en, true)
 }
 func file_save_current() {
+	if "" == cur_file {
+		return
+	}
 	var be, en gtk.GtkTextIter
 	rec, found := file_map[cur_file]
 	if false == found {

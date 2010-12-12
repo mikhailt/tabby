@@ -30,9 +30,7 @@ func session_save() {
 	}
 	file.Truncate(0)
 	for k, _ := range file_map {
-		if k != "" {
-			file.WriteString(k + "\n")
-		}
+		file.WriteString(k + "\n")
 	}
 	file.Close()
 }
@@ -42,7 +40,7 @@ func session_open_and_read_file(name string) {
 	if false == read_ok {
 		return
 	}
-	if add_file_record(name, buf, false) {
+	if add_file_record(name, buf, true) {
 		file_stack_push(name)
 	}
 }
