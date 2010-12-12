@@ -22,6 +22,30 @@ func name_is_ignored(name string) bool {
 	return false
 }
 
+// Returns set of files contained in stack + cur_file. Deletes all the files 
+// from stack as a side effect. Also returns reverse list of files from stack
+// without duplications preceeded by cur_file.
+func get_stack_set() (map[string]int, []string, int) {
+	m := make(map[string]int)
+	list := make([]string, STACK_SIZE)
+	m[cur_file] = 1
+	list[0] = cur_file
+	list_size := 1
+	for {
+		file := file_stack_pop()
+		if "" == file {
+			break
+		}
+		_, found := m[file]
+		if false == found {
+			list[list_size] = file
+			list_size++
+		}
+		m[file] = 1
+	}
+	return m, list, list_size
+}
+
 func session_save() {
 	file, _ := os.Open(os.Getenv("HOME")+"/.tabby", os.O_CREAT|os.O_WRONLY, 0644)
 	if nil == file {
@@ -29,8 +53,18 @@ func session_save() {
 		return
 	}
 	file.Truncate(0)
+	stack_set, list, list_size := get_stack_set()
+	// Dump all the files not contained in file_stack.
 	for k, _ := range file_map {
-		file.WriteString(k + "\n")
+		_, found := stack_set[k]
+		if false == found {
+			file.WriteString(k + "\n")
+		}
+	}
+	// Dump files from stack in the right order. Last file should be last in the
+	// list of files in .tabby file.
+	for y := list_size - 1; y >= 0; y-- {
+		file.WriteString(list[y] + "\n")
 	}
 	file.Close()
 }
