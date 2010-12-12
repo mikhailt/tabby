@@ -16,8 +16,8 @@ GOFILES=\
 	src/tools.go
 
 fix_style:
-	cp ./go.lang /usr/share/gtksourceview-2.0/language-specs/
-	cp ./classic.xml /usr/share/gtksourceview-2.0/styles/
+	sudo cp ./go.lang /usr/share/gtksourceview-2.0/language-specs/
+	sudo cp ./classic.xml /usr/share/gtksourceview-2.0/styles/
 
 build_file_tree:
 	cd ./file_tree && gomake install
