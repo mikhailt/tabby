@@ -8,7 +8,7 @@ SCREENSHOT:
 
 ![tabby!](https://github.com/mikhailt/tabby/raw/gh-pages/tabby.png "tabby!")
 
-INSTALL:
+BUILD:
 --------
   Compile & run:
     make
