@@ -38,6 +38,8 @@ func add_file_record(name string, buf []byte, bump_flag bool) bool {
 	rec.modified = false
 	rec.buf = buf
 	file_tree_insert(name, rec)
-	inotify_add_watch(name)
+	if file_is_saved(name) {
+		inotify_add_watch(name)
+	}
 	return true
 }

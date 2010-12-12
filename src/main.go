@@ -23,7 +23,7 @@ var search_store *gtk.GtkTreeStore
 var search_model *gtk.GtkTreeModel
 var search_window *gtk.GtkScrolledWindow
 
-var cur_file string
+var cur_file string = ""
 var cur_iter gtk.GtkTreeIter
 
 func refresh_title() {
@@ -290,12 +290,14 @@ func init_tabby() {
 	// Cannot be called before ShowAll. This is also not clear.
 	file_switch_to(file_stack_pop())
 	stack_prev(&file_stack_max)
+	if "" == cur_file {
+	  new_cb()
+	}
 	source_view.GrabFocus()
 }
 
 func init_vars() {
 	file_map = make(map[string]*FileRecord)
-	cur_file = ""
 	refresh_title()
 	session_restore()
 	file_tree_store()

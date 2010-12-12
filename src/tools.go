@@ -11,9 +11,6 @@ func gofmt_all() {
 	for file, _ := range file_map {
 		gofmt(file)
 	}
-	if cur_file == "" {
-		gofmt("")
-	}
 	file_tree_store()
 }
 

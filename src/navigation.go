@@ -29,10 +29,8 @@ func get_source() string {
 	source_buf.GetEndIter(&en)
 	return source_buf.GetText(&be, &en, true)
 }
+
 func file_save_current() {
-	if "" == cur_file {
-		return
-	}
 	var be, en gtk.GtkTextIter
 	rec, found := file_map[cur_file]
 	if false == found {
@@ -50,6 +48,9 @@ func file_save_current() {
 // Switches to another file. In most cases you want to call file_save_current 
 // before this method. Otherwise current changes will be lost.
 func file_switch_to(name string) {
+  if "" == name {
+    return
+  }
 	tree_view_set_cur_iter(false)
 	rec, found := file_map[name]
 	var text_to_set string
@@ -333,7 +334,8 @@ func prev_file_cb() {
 	if shift_flag {
 		stack_prev(&file_stack_max)
 	}
-	// Popping out cur_file pushed in file_save_current.
+	// Popping out cur_file pushed in file_save_current. 
+	// Wrong in case of "" is cur_file !!!
 	file_stack_pop()
 	file_switch_to(file_stack_pop())
 }

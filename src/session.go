@@ -10,6 +10,10 @@ type IgnoreMap map[string]*regexp.Regexp
 
 var ignore IgnoreMap
 
+func file_is_saved(file string) bool {
+  return '/' == file[0]
+}
+
 func name_is_ignored(name string) bool {
 	for _, re := range ignore {
 		if nil == re {
@@ -22,26 +26,32 @@ func name_is_ignored(name string) bool {
 	return false
 }
 
+func get_stack_set_add_file(file string, m map[string]int, l []string, s *int) {
+  if !file_is_saved(file) {
+    return
+  }
+  _, found := m[file]
+  if !found {
+    m[file] = 1
+    l[*s] = file
+    *s++
+  }
+}
+
 // Returns set of files contained in stack + cur_file. Deletes all the files 
 // from stack as a side effect. Also returns reverse list of files from stack
 // without duplications preceeded by cur_file.
 func get_stack_set() (map[string]int, []string, int) {
 	m := make(map[string]int)
 	list := make([]string, STACK_SIZE)
-	m[cur_file] = 1
-	list[0] = cur_file
-	list_size := 1
+	list_size := 0
+	get_stack_set_add_file(cur_file, m, list, &list_size)
 	for {
 		file := file_stack_pop()
 		if "" == file {
 			break
 		}
-		_, found := m[file]
-		if false == found {
-			list[list_size] = file
-			list_size++
-		}
-		m[file] = 1
+		get_stack_set_add_file(file, m, list, &list_size)
 	}
 	return m, list, list_size
 }
@@ -57,7 +67,7 @@ func session_save() {
 	// Dump all the files not contained in file_stack.
 	for k, _ := range file_map {
 		_, found := stack_set[k]
-		if false == found {
+		if (false == found) && file_is_saved(k) {
 			file.WriteString(k + "\n")
 		}
 	}

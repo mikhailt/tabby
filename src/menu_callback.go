@@ -4,13 +4,21 @@ import (
 	"glib"
 	"gtk"
 	"os"
+	"strconv"
 )
 
 var prev_dir string
+var last_unsaved int = -1
 
 func new_cb() {
 	file_save_current()
-	file_switch_to("")
+	last_unsaved++
+	file := "unsaved file " + strconv.Itoa(last_unsaved)
+	add_file_record(file, []byte(""), true)
+	file_map[file].modified = true
+	file_tree_store()
+	file_switch_to(file)
+	tree_view_set_cur_iter(true)
 }
 
 func open_cb() {
@@ -44,30 +52,30 @@ func open_rec_cb() {
 }
 
 func save_cb() {
-	if "" == cur_file {
+	if !file_is_saved(cur_file) {
 		save_as_cb()
-	} else {
-		inotify_rm_watch(cur_file)
-		defer inotify_add_watch(cur_file)
-		file, _ := os.Open(cur_file, os.O_CREAT|os.O_WRONLY, 0644)
-		if nil == file {
-			bump_message("Unable to open file for writing: " + cur_file)
-			return
-		}
-		file_save_current()
-		rec, _ := file_map[cur_file]
-		nbytes, err := file.WriteString(string(rec.buf))
-		if nbytes != len(rec.buf) {
-			bump_message("Error while writing to file: " + cur_file)
-			println("nbytes = ", nbytes, " errno = ", err)
-			return
-		}
-		file.Truncate(int64(nbytes))
-		file.Close()
-
-		source_buf.SetModified(false)
-		refresh_title()
+		return
 	}
+	inotify_rm_watch(cur_file)
+	defer inotify_add_watch(cur_file)
+	file, _ := os.Open(cur_file, os.O_CREAT|os.O_WRONLY, 0644)
+	if nil == file {
+		bump_message("Unable to open file for writing: " + cur_file)
+		return
+	}
+	file_save_current()
+	rec, _ := file_map[cur_file]
+	nbytes, err := file.WriteString(string(rec.buf))
+	if nbytes != len(rec.buf) {
+		bump_message("Error while writing to file: " + cur_file)
+		println("nbytes = ", nbytes, " errno = ", err)
+		return
+	}
+	file.Truncate(int64(nbytes))
+	file.Close()
+
+	source_buf.SetModified(false)
+	refresh_title()
 }
 
 func save_as_cb() {
@@ -81,13 +89,16 @@ func save_as_cb() {
 	text_to_save := source_buf.GetText(&be, &en, true)
 	add_file_record(dialog_file, []byte(text_to_save), true)
 	file_tree_store()
+	file_to_delete := cur_file
 	file_switch_to(dialog_file)
+	delete_file_record(file_to_delete)
+	file_tree_store()
 	save_cb()
 	tree_view_set_cur_iter(true)
 }
 
 func exit_cb() {
-	// Are-you-sure-you-want-to-exit-because-file-is-unsaved logic will be here
+	// Are-you-sure-you-want-to-exit-because-file-is-unsaved logic will be here.
 	session_save()
 	gtk.MainQuit()
 }

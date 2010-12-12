@@ -42,6 +42,10 @@ func inotify_add_watch(name string) {
 	wd, err := syscall.InotifyAddWatch(inotify_fd, name,
 		syscall.IN_MODIFY|syscall.IN_DELETE_SELF|syscall.IN_MOVE_SELF)
 	if -1 == wd {
+		if err == syscall.ENOENT {
+			// Dirty hack.
+			return
+		}
 		println("tabby: InotifyAddWatch failed, changes of file ", name,
 			" outside of tabby will remain unnoticed, errno = ", err)
 		return
