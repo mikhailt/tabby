@@ -201,17 +201,17 @@ func file_chooser_dialog(t int) (bool, string) {
 
 func error_chk_cb(current bool) {
 	error_window.SetVisible(current)
-	opt.showError = current
+	opt.show_error = current
 }
 
 func search_chk_cb(current bool) {
 	search_window.SetVisible(current)
-	opt.showSearch = current
+	opt.show_search = current
 }
 
 func notab_chk_cb(current bool) {
-	opt.spaceNotTab = current
-	source_view.SetInsertSpacesInsteadOfTabs(opt.spaceNotTab)
+	opt.space_not_tab = current
+	source_view.SetInsertSpacesInsteadOfTabs(opt.space_not_tab)
 }
 
 func gofmt_cb() {

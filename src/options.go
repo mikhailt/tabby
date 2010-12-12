@@ -7,19 +7,19 @@ import (
 )
 
 type Options struct {
-	showError, showSearch, spaceNotTab          bool
-	ohpPosition, ihpPosition, vvpPosition       int
-	windowWidth, windowHeight, windowX, windowY int
+	show_error, show_search, space_not_tab          bool
+	ohp_position, ihp_position, vvp_position        int
+	window_width, window_height, window_x, window_y int
 }
 
 func new_options() (o Options) {
-	o.showSearch = true
-	o.showError = true
-	o.ihpPosition = 150
-	o.ohpPosition = 670
-	o.vvpPosition = 375
-	o.windowWidth, o.windowHeight = 800, 510
-	o.windowX, o.windowY = 0, 0
+	o.show_search = true
+	o.show_error = true
+	o.ihp_position = 150
+	o.ohp_position = 670
+	o.vvp_position = 375
+	o.window_width, o.window_height = 800, 510
+	o.window_x, o.window_y = 0, 0
 	return
 }
 
@@ -35,20 +35,20 @@ func load_options() {
 	for next_string_from_reader(reader, &str) {
 		args := strings.Split(compact_space(str), "\t", -1)
 		switch args[0] {
-		case "spaceNotTab":
-			opt.spaceNotTab, _ = strconv.Atob(args[1])
-		case "showSearch":
-			opt.showSearch, _ = strconv.Atob(args[1])
-		case "showError":
-			opt.showError, _ = strconv.Atob(args[1])
-		case "ihpPosition":
-			opt.ihpPosition = atoi(args[1])
-		case "ohpPosition":
-			opt.ohpPosition = atoi(args[1])
-		case "vvpPosition":
-			opt.vvpPosition = atoi(args[1])
-		case "allocWindow":
-			opt.windowWidth, opt.windowHeight, opt.windowX, opt.windowY = atoi(args[1]),
+		case "space_not_tab":
+			opt.space_not_tab, _ = strconv.Atob(args[1])
+		case "show_search":
+			opt.show_search, _ = strconv.Atob(args[1])
+		case "show_error":
+			opt.show_error, _ = strconv.Atob(args[1])
+		case "ihp_position":
+			opt.ihp_position = atoi(args[1])
+		case "ohp_position":
+			opt.ohp_position = atoi(args[1])
+		case "vvp_position":
+			opt.vvp_position = atoi(args[1])
+		case "alloc_window":
+			opt.window_width, opt.window_height, opt.window_x, opt.window_y = atoi(args[1]),
 				atoi(args[2]), atoi(args[3]), atoi(args[4])
 		}
 	}
@@ -60,15 +60,15 @@ func save_options() {
 		return
 	}
 	file.Truncate(0)
-	file.WriteString("showSearch\t" + strconv.Btoa(opt.showSearch) + "\n")
-	file.WriteString("showError\t" + strconv.Btoa(opt.showError) + "\n")
-	file.WriteString("spaceNotTab\t" + strconv.Btoa(opt.spaceNotTab) + "\n")
-	file.WriteString("ihpPosition\t" + strconv.Itoa(opt.ihpPosition) + "\n")
-	file.WriteString("ohpPosition\t" + strconv.Itoa(opt.ohpPosition) + "\n")
-	file.WriteString("vvpPosition\t" + strconv.Itoa(opt.vvpPosition) + "\n")
-	file.WriteString("allocWindow\t" + strconv.Itoa(opt.windowWidth) + "\t" +
-		strconv.Itoa(opt.windowHeight) + "\t" + strconv.Itoa(opt.windowX) + "\t" +
-		strconv.Itoa(opt.windowY) + "\n")
+	file.WriteString("show_search\t" + strconv.Btoa(opt.show_search) + "\n")
+	file.WriteString("show_error\t" + strconv.Btoa(opt.show_error) + "\n")
+	file.WriteString("space_not_tab\t" + strconv.Btoa(opt.space_not_tab) + "\n")
+	file.WriteString("ihp_position\t" + strconv.Itoa(opt.ihp_position) + "\n")
+	file.WriteString("ohp_position\t" + strconv.Itoa(opt.ohp_position) + "\n")
+	file.WriteString("vvp_position\t" + strconv.Itoa(opt.vvp_position) + "\n")
+	file.WriteString("alloc_window\t" + strconv.Itoa(opt.window_width) + "\t" +
+		strconv.Itoa(opt.window_height) + "\t" + strconv.Itoa(opt.window_x) + "\t" +
+		strconv.Itoa(opt.window_y) + "\n")
 	file.Close()
 }
 
@@ -91,18 +91,18 @@ func replace_space(s string) string {
 var opt Options = new_options()
 
 func window_event_cb() {
-	main_window.GetSize(&opt.windowWidth, &opt.windowHeight)
-	main_window.GetPosition(&opt.windowX, &opt.windowY)
+	main_window.GetSize(&opt.window_width, &opt.window_height)
+	main_window.GetPosition(&opt.window_x, &opt.window_y)
 }
 
 func ohp_cb(pos int) {
-	opt.ohpPosition = pos
+	opt.ohp_position = pos
 }
 
 func ihp_cb(pos int) {
-	opt.ihpPosition = pos
+	opt.ihp_position = pos
 }
 
 func vvp_cb(pos int) {
-	opt.vvpPosition = pos
+	opt.vvp_position = pos
 }

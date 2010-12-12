@@ -52,6 +52,7 @@ func gofmt(file string) {
 		rec.modified = true
 	}
 }
+
 func get_output(args []string, input []byte) (std []byte, error []byte, e os.Error) {
 	inpr, inpw, err := os.Pipe()
 	if err != nil {
