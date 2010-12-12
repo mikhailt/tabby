@@ -61,18 +61,6 @@ func bump_message(m string) {
 	dialog.Destroy()
 }
 
-func bump_warning(m string) (b bool) {
-	dialog := gtk.MessageDialog(
-		main_window.GetTopLevelAsWindow(),
-		gtk.GTK_DIALOG_MODAL,
-		gtk.GTK_MESSAGE_WARNING,
-		gtk.GTK_BUTTONS_YES_NO,
-		m)
-	b = dialog.Run()==gtk.GTK_RESPONSE_YES
-	dialog.Destroy()
-	return
-}
-
 func init_tabby() {
 	gdk.ThreadsInit()
 	inotify_init()
@@ -300,14 +288,13 @@ func init_tabby() {
 	search_window.SetVisible(opt.showSearch)
 	error_window.SetVisible(opt.showError)
 	// Cannot be called before ShowAll. This is also not clear.
-	file_switch_to(opt.lastFile)
+	file_switch_to(file_stack_pop())
 	stack_prev(&file_stack_max)
 	source_view.GrabFocus()
 }
 
 func init_vars() {
 	file_map = make(map[string]*FileRecord)
-	file_map[""] = new(FileRecord)
 	cur_file = ""
 	refresh_title()
 	session_restore()

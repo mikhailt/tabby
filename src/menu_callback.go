@@ -11,12 +11,6 @@ var prev_dir string
 func new_cb() {
 	file_save_current()
 	file_switch_to("")
-	if len(file_map[""].buf) != 0 {
-		if bump_warning("You may only have one new file at a time. Discard current?") {
-			file_map[""] = new(FileRecord)
-			file_switch_to("") //discard newfile
-		}
-	}
 }
 
 func open_cb() {
@@ -85,9 +79,6 @@ func save_as_cb() {
 	source_buf.GetStartIter(&be)
 	source_buf.GetEndIter(&en)
 	text_to_save := source_buf.GetText(&be, &en, true)
-	if cur_file == "" {
-		file_map[""] = new(FileRecord)
-	}
 	add_file_record(dialog_file, []byte(text_to_save), true)
 	file_tree_store()
 	file_switch_to(dialog_file)

@@ -10,11 +10,9 @@ type Options struct {
 	showError, showSearch, spaceNotTab          bool
 	ohpPosition, ihpPosition, vvpPosition       int
 	windowWidth, windowHeight, windowX, windowY int
-	lastFile                                    string
 }
 
 func new_options() (o Options) {
-	o.lastFile = ""
 	o.showSearch = true
 	o.showError = true
 	o.ihpPosition = 150
@@ -37,8 +35,6 @@ func load_options() {
 	for next_string_from_reader(reader, &str) {
 		args := strings.Split(compact_space(str), "\t", -1)
 		switch args[0] {
-		case "lastFile":
-			opt.lastFile = args[1]
 		case "spaceNotTab":
 			opt.spaceNotTab, _ = strconv.Atob(args[1])
 		case "showSearch":
@@ -73,7 +69,6 @@ func save_options() {
 	file.WriteString("allocWindow\t" + strconv.Itoa(opt.windowWidth) + "\t" +
 		strconv.Itoa(opt.windowHeight) + "\t" + strconv.Itoa(opt.windowX) + "\t" +
 		strconv.Itoa(opt.windowY) + "\n")
-	file.WriteString("lastFile\t" + cur_file + "\n")
 	file.Close()
 }
 
