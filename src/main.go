@@ -62,6 +62,7 @@ func bump_message(m string) {
 }
 
 func init_tabby() {
+	init_navigation()
 	gdk.ThreadsInit()
 	inotify_init()
 
@@ -192,10 +193,10 @@ func init_tabby() {
 	find_item.AddAccelerator("activate", accel_group, gdk.GDK_f,
 		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
 
-	replace_item := gtk.MenuItemWithMnemonic("Find and Replace")
-	navigation_submenu.Append(replace_item)
-	replace_item.Connect("activate", find_cb, nil)
-	replace_item.AddAccelerator("activate", accel_group, gdk.GDK_r,
+	fnr_item := gtk.MenuItemWithMnemonic("Find and Replace")
+	navigation_submenu.Append(fnr_item)
+	fnr_item.Connect("activate", fnr_cb, nil)
+	fnr_item.AddAccelerator("activate", accel_group, gdk.GDK_r,
 		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
 
 	prev_file_item := gtk.MenuItemWithMnemonic("Prev File")

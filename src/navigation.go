@@ -2,12 +2,11 @@ package main
 
 import (
 	"gtk"
-	"gdk"
 	"runtime"
-	"strings"
 )
 
 const STACK_SIZE = 64
+const MAX_SEL_LEN = 128
 
 var selection_flag bool
 var prev_selection string
@@ -22,6 +21,20 @@ var prev_global bool = false
 var prev_pattern string = ""
 
 var accel_group *gtk.GtkAccelGroup = nil
+
+func find_entry_with_history() *gtk.GtkComboBoxEntry {
+	entry := gtk.ComboBoxEntryNewText()
+	entry.SetVisible(true)
+	selection := source_selection()
+	if ("" != selection) && (len(selection) <= MAX_SEL_LEN) {
+		entry.AppendText(selection)
+	}
+	for i := len(search_history) - 1; i >= 0; i-- {
+		entry.AppendText(search_history[i])
+	}
+	entry.SetActive(0)
+	return entry
+}
 
 func get_source() string {
 	var be, en gtk.GtkTextIter
@@ -48,9 +61,9 @@ func file_save_current() {
 // Switches to another file. In most cases you want to call file_save_current 
 // before this method. Otherwise current changes will be lost.
 func file_switch_to(name string) {
-  if "" == name {
-    return
-  }
+	if "" == name {
+		return
+	}
 	tree_view_set_cur_iter(false)
 	rec, found := file_map[name]
 	var text_to_set string
@@ -148,7 +161,7 @@ func mark_set_cb() {
 	}
 
 	sel_len := len(selection)
-	if (sel_len <= 1) || (sel_len >= 100) {
+	if (sel_len <= 1) || (sel_len >= MAX_SEL_LEN) {
 		return
 	} else {
 		selection_flag = true
@@ -179,6 +192,7 @@ func next_instance_cb() {
 	find_next_instance(&en, &be, &en, selection)
 	move_focus_and_selection(&be, &en)
 }
+
 func find_prev_instance(start, be, en *gtk.GtkTextIter, pattern string) bool {
 	if start.BackwardSearch(pattern, 0, be, en, nil) {
 		return true
@@ -197,103 +211,6 @@ func prev_instance_cb() {
 	// find_prev_instance cannot return false because selection is not empty.
 	find_prev_instance(&be, &be, &en, selection)
 	move_focus_and_selection(&be, &en)
-}
-
-func find_global(pattern string, find_file bool) {
-	var iter gtk.GtkTreeIter
-	var pos int
-	if find_file {
-		prev_pattern = ""
-	} else {
-		prev_pattern = pattern
-	}
-	search_store.Clear()
-	for name, rec := range file_map {
-		if find_file {
-			pos = strings.Index(name, pattern)
-		} else {
-			pos = strings.Index(string(rec.buf), pattern)
-		}
-		if -1 != pos {
-			search_store.Append(&iter, nil)
-			search_store.Set(&iter, name)
-		}
-	}
-}
-
-func find_cb() {
-	dialog_ok, pattern, global, find_file := find_dialog()
-	if false == dialog_ok {
-		return
-	}
-	if find_file {
-		find_global(pattern, true)
-	} else {
-		if global {
-			find_global(pattern, false)
-		}
-		find_in_current_file(pattern)
-	}
-}
-
-func find_in_current_file(pattern string) {
-	var be, en gtk.GtkTextIter
-	source_buf.GetSelectionBounds(&be, &en)
-	if find_next_instance(&en, &be, &en, pattern) {
-		move_focus_and_selection(&be, &en)
-		mark_set_cb()
-	}
-}
-
-func find_dialog() (bool, string, bool, bool) {
-	if nil == accel_group {
-		accel_group = gtk.AccelGroup()
-	}
-	dialog := gtk.Dialog()
-	defer dialog.Destroy()
-	dialog.SetTitle("Find")
-	dialog.AddButton("_Find", gtk.GTK_RESPONSE_ACCEPT)
-	dialog.AddButton("_Cancel", gtk.GTK_RESPONSE_CANCEL)
-	w := dialog.GetWidgetForResponse(gtk.GTK_RESPONSE_ACCEPT)
-	dialog.AddAccelGroup(accel_group)
-	w.AddAccelerator("clicked", accel_group, gdk.GDK_Return,
-		0, gtk.GTK_ACCEL_VISIBLE)
-	entry := gtk.ComboBoxEntryNewText()
-	entry.SetVisible(true)
-	selection := source_selection()
-	if "" != selection {
-		entry.AppendText(selection)
-	}
-	l := len(search_history)
-	for i := l - 1; i >= 0; i-- {
-		entry.AppendText(search_history[i])
-	}
-	entry.SetActive(0)
-	global_button := gtk.CheckButtonWithLabel("Global")
-	global_button.SetVisible(true)
-	global_button.SetActive(prev_global)
-	file_button := gtk.CheckButtonWithLabel("Find file by name pattern")
-	file_button.SetVisible(true)
-	vbox := dialog.GetVBox()
-	vbox.Add(entry)
-	vbox.Add(global_button)
-	vbox.Add(file_button)
-	if gtk.GTK_RESPONSE_ACCEPT == dialog.Run() {
-		entry_text := entry.GetActiveText()
-		if nil == search_history {
-			search_history = make([]string, 1)
-			search_history[0] = entry_text
-		} else {
-			be := 0
-			if 10 <= l {
-				be = 1
-			}
-			search_history = append(search_history[be:], entry_text)
-		}
-		prev_global = global_button.GetActive()
-		return true, entry_text, prev_global, file_button.GetActive()
-	}
-	return false, "", false, false
 }
 
 func move_focus_and_selection(be *gtk.GtkTextIter, en *gtk.GtkTextIter) {
@@ -344,4 +261,8 @@ func file_stack_at_top() string {
 	t := file_stack_top
 	stack_prev(&t)
 	return file_stack[t]
+}
+
+func init_navigation() {
+	accel_group = gtk.AccelGroup()
 }
