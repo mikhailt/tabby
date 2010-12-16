@@ -107,9 +107,15 @@ func close_cb() {
 	if "" == cur_file {
 		return
 	}
-	delete_file_record(cur_file)
-	file_switch_to(file_stack_pop())
-	file_tree_store()
+	close_it := !source_buf.GetModified()
+	if !close_it {
+		close_it = bump_warning("This file has been modified. Close it?")
+	}
+	if close_it {
+		delete_file_record(cur_file)
+		file_switch_to(file_stack_pop())
+		file_tree_store()
+	}
 }
 
 func paste_done_cb() {

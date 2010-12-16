@@ -11,7 +11,7 @@ type IgnoreMap map[string]*regexp.Regexp
 var ignore IgnoreMap
 
 func file_is_saved(file string) bool {
-  return '/' == file[0]
+	return '/' == file[0]
 }
 
 func name_is_ignored(name string) bool {
@@ -27,15 +27,15 @@ func name_is_ignored(name string) bool {
 }
 
 func get_stack_set_add_file(file string, m map[string]int, l []string, s *int) {
-  if !file_is_saved(file) {
-    return
-  }
-  _, found := m[file]
-  if !found {
-    m[file] = 1
-    l[*s] = file
-    *s++
-  }
+	if !file_is_saved(file) {
+		return
+	}
+	_, found := m[file]
+	if !found {
+		m[file] = 1
+		l[*s] = file
+		*s++
+	}
 }
 
 // Returns set of files contained in stack + cur_file. Deletes all the files 

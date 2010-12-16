@@ -61,6 +61,18 @@ func bump_message(m string) {
 	dialog.Destroy()
 }
 
+func bump_warning(m string) (b bool) {
+	dialog := gtk.MessageDialog(
+		main_window.GetTopLevelAsWindow(),
+		gtk.GTK_DIALOG_MODAL,
+		gtk.GTK_MESSAGE_WARNING,
+		gtk.GTK_BUTTONS_YES_NO,
+		m)
+	b = dialog.Run() == gtk.GTK_RESPONSE_YES
+	dialog.Destroy()
+	return
+}
+
 func init_tabby() {
 	init_navigation()
 	gdk.ThreadsInit()
@@ -292,7 +304,7 @@ func init_tabby() {
 	file_switch_to(file_stack_pop())
 	stack_prev(&file_stack_max)
 	if "" == cur_file {
-	  new_cb()
+		new_cb()
 	}
 	source_view.GrabFocus()
 }
