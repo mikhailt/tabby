@@ -73,8 +73,9 @@ func fnr_dialog() {
 		nil)
 
 	replace_all_button.Connect("clicked", func() {
+		insert_set = false
 		fnr_pre_cb(global_button, &insert_set, &scope_be)
-		fnr_cnt += fnr_replace_all_local()
+		fnr_cnt += fnr_replace_all_local(entry.GetActiveText(), replacement.GetActiveText())
 		if prev_global {
 			fnr_cnt += fnr_replace_all_global()
 		}
@@ -87,8 +88,20 @@ func fnr_dialog() {
 	dialog.Run()
 }
 
-func fnr_replace_all_local() int {
-	return 0
+func fnr_replace_all_local(entry string, replacement string) int {
+	cnt := 0
+	var t bool = true
+	if !fnr_find_next(entry, false, &t, nil) {
+		return 0
+	}
+	for ; ; {
+		done, next_found := fnr_replace(entry, replacement, false, &t, nil)
+		cnt += done
+		if !next_found {
+			break
+		}
+	}
+	return cnt
 } 
 
 func fnr_replace_all_global() int {

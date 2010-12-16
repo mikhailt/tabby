@@ -61,7 +61,7 @@ func bump_message(m string) {
 	dialog.Destroy()
 }
 
-func bump_warning(m string) (b bool) {
+func bump_question(m string) (b bool) {
 	dialog := gtk.MessageDialog(
 		main_window.GetTopLevelAsWindow(),
 		gtk.GTK_DIALOG_MODAL,

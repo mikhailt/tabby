@@ -109,7 +109,7 @@ func close_cb() {
 	}
 	close_it := !source_buf.GetModified()
 	if !close_it {
-		close_it = bump_warning("This file has been modified. Close it?")
+		close_it = bump_question("This file has been modified. Close it?")
 	}
 	if close_it {
 		delete_file_record(cur_file)
