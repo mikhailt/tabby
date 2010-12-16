@@ -52,7 +52,7 @@ func fnr_dialog() {
 	close_button := dialog.GetWidgetForResponse(gtk.GTK_RESPONSE_CLOSE)
 
 	find_next_button.Connect("clicked", func() {
-		fnr_pre_cb(global_button, &insert_set, &scope_be)
+		fnr_pre_cb(global_button, &insert_set)
 		if !fnr_find_next(entry.GetActiveText(), prev_global, &map_filled, &global_map) {
 			fnr_close_and_report(dialog, fnr_cnt)
 		}
@@ -62,7 +62,7 @@ func fnr_dialog() {
 		0, gtk.GTK_ACCEL_VISIBLE)
 
 	replace_button.Connect("clicked", func() {
-		fnr_pre_cb(global_button, &insert_set, &scope_be)
+		fnr_pre_cb(global_button, &insert_set)
 		done, next_found := fnr_replace(entry.GetActiveText(), replacement.GetActiveText(),
 			prev_global, &map_filled, &global_map)
 		fnr_cnt += done
@@ -74,10 +74,11 @@ func fnr_dialog() {
 
 	replace_all_button.Connect("clicked", func() {
 		insert_set = false
-		fnr_pre_cb(global_button, &insert_set, &scope_be)
+		fnr_pre_cb(global_button, &insert_set)
 		fnr_cnt += fnr_replace_all_local(entry.GetActiveText(), replacement.GetActiveText())
 		if prev_global {
-			fnr_cnt += fnr_replace_all_global()
+			fnr_cnt += fnr_replace_all_global(entry.GetActiveText(), replacement.GetActiveText())
+			file_tree_store()
 		}
 		fnr_close_and_report(dialog, fnr_cnt)
 	},
@@ -94,7 +95,7 @@ func fnr_replace_all_local(entry string, replacement string) int {
 	if !fnr_find_next(entry, false, &t, nil) {
 		return 0
 	}
-	for ; ; {
+	for {
 		done, next_found := fnr_replace(entry, replacement, false, &t, nil)
 		cnt += done
 		if !next_found {
@@ -102,17 +103,54 @@ func fnr_replace_all_local(entry string, replacement string) int {
 		}
 	}
 	return cnt
-} 
-
-func fnr_replace_all_global() int {
-	return 0
 }
 
-func fnr_pre_cb(global_button *gtk.GtkCheckButton, insert_set *bool, 
-scope_be *gtk.GtkTextIter) {
+func fnr_replace_all_global(entry, replacement string) int {
+	total_cnt := 0
+	lent := len(entry)
+	lrep := len(replacement)
+	inds := make(map[int]int)
+	for file, rec := range file_map {
+		if file == cur_file {
+			continue
+		}
+		cnt := 0
+		scope := rec.buf[:]
+		for {
+			pos := strings.Index(string(scope), entry)
+			if -1 == pos {
+				break
+			}
+			inds[cnt] = pos
+			cnt++
+			scope = scope[pos+lent:]
+		}
+		if 0 == cnt {
+			continue
+		}
+		buf := make([]byte, len(rec.buf)+cnt*(lrep-lent))
+		scope = rec.buf[:]
+		dest_scope := buf[:]
+		for y := 0; y < cnt; y++ {
+			shift := inds[y]
+			copy(dest_scope, scope[:shift])
+			dest_scope = dest_scope[shift:]
+			copy(dest_scope, replacement)
+			dest_scope = dest_scope[lrep:]
+			scope = scope[shift+lent:]
+		}
+		copy(dest_scope, scope)
+		rec.buf = buf
+		rec.modified = true
+		total_cnt += cnt
+	}
+	return total_cnt
+}
+
+func fnr_pre_cb(global_button *gtk.GtkCheckButton, insert_set *bool) {
 	prev_global = global_button.GetActive()
 	fnr_refresh_scope(prev_global)
-	fnr_set_insert(insert_set, scope_be)
+	fnr_set_insert(insert_set)
 }
 
 func fnr_close_and_report(dialog *gtk.GtkDialog, fnr_cnt int) {
@@ -120,11 +158,13 @@ func fnr_close_and_report(dialog *gtk.GtkDialog, fnr_cnt int) {
 	bump_message(strconv.Itoa(fnr_cnt) + " replacements were done.")
 }
 
-func fnr_set_insert(insert_set *bool, scope_be *gtk.GtkTextIter) {
+func fnr_set_insert(insert_set *bool) {
 	if false == *insert_set {
 		*insert_set = true
-		source_buf.MoveMarkByName("insert", scope_be)
-		source_buf.MoveMarkByName("selection_bound", scope_be)
+		var scope_be gtk.GtkTextIter
+		get_iter_at_mark_by_name("fnr_be", &scope_be)
+		source_buf.MoveMarkByName("insert", &scope_be)
+		source_buf.MoveMarkByName("selection_bound", &scope_be)
 	}
 }
 
@@ -151,7 +191,6 @@ func fnr_find_next(pattern string, global bool, map_filled *bool, m *map[string]
 		// Switch to next file.
 		fnr_find_next_fill_global_map(pattern, m, map_filled)
 		next_file := pop_string_from_map(m)
-		println("next_file = ", next_file)
 		if "" == next_file {
 			return false
 		}
@@ -187,7 +226,6 @@ func fnr_find_next_fill_global_map(pattern string, m *map[string]int, map_filled
 		}
 		if -1 != strings.Index(string(rec.buf), pattern) {
 			(*m)[file] = 1
-			println(file)
 		}
 	}
 }
@@ -203,11 +241,9 @@ func fnr_replace(entry string, replacement string, global bool, map_filled *bool
 
 func pop_string_from_map(m *map[string]int) string {
 	if 0 == len(*m) {
-		println("len(m) = 0")
 		return ""
 	}
 	for s, _ := range *m {
-		println("popping ", s)
 		(*m)[s] = 0, false
 		return s
 	}

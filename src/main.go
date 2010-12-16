@@ -81,7 +81,7 @@ func init_tabby() {
 	lang_man := gtk.SourceLanguageManagerGetDefault()
 	lang := lang_man.GetLanguage("go")
 	if nil == lang.SourceLanguage {
-		println("warning: no language specification")
+		println("tabby: warning: no language specification")
 	}
 	source_buf = gtk.SourceBuffer()
 	source_buf.SetLanguage(lang)

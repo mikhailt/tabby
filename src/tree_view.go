@@ -23,7 +23,7 @@ func search_view_select_cb() {
 	file_switch_to(file)
 	tree_view_scroll_to_cur_iter()
 	if "" != prev_pattern {
-		find_in_current_file(prev_pattern)
+		find_in_current_file(prev_pattern, false)
 	}
 }
 

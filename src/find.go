@@ -19,6 +19,10 @@ func find_global(pattern string, find_file bool) {
 		if find_file {
 			pos = strings.Index(name, pattern)
 		} else {
+			if name == cur_file {
+				// find_in_current_file does required work for cur_file.
+				continue
+			}
 			pos = strings.Index(string(rec.buf), pattern)
 		}
 		if -1 != pos {
@@ -39,16 +43,21 @@ func find_cb() {
 		if global {
 			find_global(pattern, false)
 		}
-		find_in_current_file(pattern)
+		find_in_current_file(pattern, global)
 	}
 }
 
-func find_in_current_file(pattern string) {
+func find_in_current_file(pattern string, global bool) {
 	var be, en gtk.GtkTextIter
 	source_buf.GetSelectionBounds(&be, &en)
 	if find_next_instance(&en, &be, &en, pattern) {
 		move_focus_and_selection(&be, &en)
 		mark_set_cb()
+		if global {
+			var iter gtk.GtkTreeIter
+			search_store.Append(&iter, nil)
+			search_store.Set(&iter, cur_file)
+		}
 	}
 }
 
