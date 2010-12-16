@@ -52,9 +52,7 @@ func fnr_dialog() {
 	close_button := dialog.GetWidgetForResponse(gtk.GTK_RESPONSE_CLOSE)
 
 	find_next_button.Connect("clicked", func() {
-		prev_global = global_button.GetActive()
-		fnr_refresh_scope(prev_global)
-		fnr_set_insert(&insert_set, &scope_be)
+		fnr_pre_cb(global_button, &insert_set, &scope_be)
 		if !fnr_find_next(entry.GetActiveText(), prev_global, &map_filled, &global_map) {
 			fnr_close_and_report(dialog, fnr_cnt)
 		}
@@ -64,9 +62,7 @@ func fnr_dialog() {
 		0, gtk.GTK_ACCEL_VISIBLE)
 
 	replace_button.Connect("clicked", func() {
-		prev_global = global_button.GetActive()
-		fnr_refresh_scope(prev_global)
-		fnr_set_insert(&insert_set, &scope_be)
+		fnr_pre_cb(global_button, &insert_set, &scope_be)
 		done, next_found := fnr_replace(entry.GetActiveText(), replacement.GetActiveText(),
 			prev_global, &map_filled, &global_map)
 		fnr_cnt += done
@@ -77,13 +73,33 @@ func fnr_dialog() {
 		nil)
 
 	replace_all_button.Connect("clicked", func() {
-		println("replace all")
+		fnr_pre_cb(global_button, &insert_set, &scope_be)
+		fnr_cnt += fnr_replace_all_local()
+		if prev_global {
+			fnr_cnt += fnr_replace_all_global()
+		}
+		fnr_close_and_report(dialog, fnr_cnt)
 	},
 		nil)
 
 	close_button.Connect("clicked", func() { dialog.Destroy() }, nil)
 
 	dialog.Run()
+}
+
+func fnr_replace_all_local() int {
+	return 0
+} 
+
+func fnr_replace_all_global() int {
+	return 0
+}
+
+func fnr_pre_cb(global_button *gtk.GtkCheckButton, insert_set *bool, 
+scope_be *gtk.GtkTextIter) {
+	prev_global = global_button.GetActive()
+	fnr_refresh_scope(prev_global)
+	fnr_set_insert(insert_set, scope_be)
 }
 
 func fnr_close_and_report(dialog *gtk.GtkDialog, fnr_cnt int) {
