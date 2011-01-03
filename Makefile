@@ -5,6 +5,7 @@ include $(GOROOT)/src/Make.inc
 TARG=tabby
 GOFILES=\
 	src/main.go\
+	src/args.go\
 	src/file_tree.go\
 	src/file_record.go\
 	src/menu_callback.go\
@@ -27,7 +28,6 @@ build_file_tree:
 all:
 	cp ./.tabbyignore ~/
 	make build_file_tree
-	make fix_style
 	make tabby
 
 c:

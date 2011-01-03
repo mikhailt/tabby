@@ -4,6 +4,7 @@ import (
 	"gtk"
 	"gdk"
 	"file_tree"
+	"flag"
 )
 
 var main_window *gtk.GtkWindow
@@ -81,7 +82,7 @@ func init_tabby() {
 	lang_man := gtk.SourceLanguageManagerGetDefault()
 	lang := lang_man.GetLanguage("go")
 	if nil == lang.SourceLanguage {
-		println("tabby: warning: no language specification")
+		tabby_log("warning: no language specification")
 	}
 	source_buf = gtk.SourceBuffer()
 	source_buf.SetLanguage(lang)
@@ -309,10 +310,22 @@ func init_tabby() {
 	source_view.GrabFocus()
 }
 
+func tabby_log(m string) {
+	println("tabby: " + m)
+}
+
 func init_vars() {
 	file_map = make(map[string]*FileRecord)
 	refresh_title()
-	session_restore()
+	pfocus_line := flag.Int("f", 0, "Focus line")
+	flag.Parse()
+	args := flag.Args()
+	if 0 == len(args) {
+		session_restore()
+	}
+	for _, s := range args {
+		open_file_from_args(s, *pfocus_line)
+	}
 	file_tree_store()
 }
 

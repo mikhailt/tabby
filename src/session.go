@@ -59,7 +59,7 @@ func get_stack_set() (map[string]int, []string, int) {
 func session_save() {
 	file, _ := os.Open(os.Getenv("HOME")+"/.tabby", os.O_CREAT|os.O_WRONLY, 0644)
 	if nil == file {
-		println("tabby: unable to save session")
+		tabby_log("unable to save session")
 		return
 	}
 	file.Truncate(0)
@@ -106,7 +106,7 @@ func session_restore() {
 func take_reader_from_file(name string) (*bufio.Reader, *os.File) {
 	file, _ := os.Open(name, os.O_CREAT|os.O_RDONLY, 0644)
 	if nil == file {
-		println("tabby: unable to Open file for reading: ", name)
+		tabby_log("unable to Open file for reading: " + name)
 		return nil, nil
 	}
 	return bufio.NewReader(file), file

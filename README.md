@@ -22,5 +22,8 @@ BUILD:
     make
     ./tabby 
     
+  Put style sheets to corresponding places:
+    make fix_style
+    
   Install:
     make install
