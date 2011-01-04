@@ -241,8 +241,18 @@ func next_file_cb() {
 	if file_stack_top == file_stack_max {
 		return
 	}
-	file_save_current()
-	file_switch_to(file_stack[file_stack_top])
+	cur := file_stack_top
+	for stack_next(&cur); ; stack_next(&cur) {
+		if file_opened(file_stack[cur]) {
+			file_save_current()
+			file_switch_to(file_stack[cur])
+			file_stack_top = cur
+			return
+		}
+		if cur == file_stack_max {
+			break
+		}
+	}
 }
 
 func prev_file_cb() {

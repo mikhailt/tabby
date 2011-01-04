@@ -5,6 +5,7 @@ import (
 	"unsafe"
 	"gdk"
 	"gtk"
+	"strconv"
 )
 
 var name_by_wd map[int32]string
@@ -18,6 +19,8 @@ var epoll_fd int
 const NEVENTS int = 1024
 
 func inotify_init() {
+	var err int
+
 	name_by_wd = make(map[int32]string)
 	wd_by_name = make(map[string]int32)
 	var event syscall.InotifyEvent
@@ -28,9 +31,9 @@ func inotify_init() {
 			"will remain unnoticed")
 		return
 	}
-	epoll_fd, _ = syscall.EpollCreate(1)
+	epoll_fd, err = syscall.EpollCreate(1)
 	if -1 == epoll_fd {
-		println("tabby: inotify_init: EpollCreate failed")
+		tabby_log("inotify_init: " + strconv.Itoa(err))
 	}
 	var epoll_event syscall.EpollEvent
 	epoll_event.Events = syscall.EPOLLIN
@@ -46,8 +49,8 @@ func inotify_add_watch(name string) {
 			// Dirty hack.
 			return
 		}
-		println("tabby: InotifyAddWatch failed, changes of file ", name,
-			" outside of tabby will remain unnoticed, errno = ", err)
+		tabby_log("InotifyAddWatch failed, changes of file " + name +
+			" outside of tabby will remain unnoticed, errno = " + strconv.Itoa(err))
 		return
 	}
 	name_by_wd[int32(wd)] = name
@@ -81,7 +84,7 @@ func inotify_observe() {
 		for name, _ := range collect {
 			rec, rec_found := file_map[name]
 			if false == rec_found {
-				println("tabby: inotify_observe: ", name, " not found in file_map")
+				tabby_log("inotify_observe: " + name + " not found in file_map")
 				continue
 			}
 			if reload {
@@ -122,8 +125,7 @@ func inotify_observe_collect(buf []byte) map[string]int {
 		nevents, err := syscall.EpollWait(epoll_fd, epoll_buf, 500)
 		if 0 >= nevents {
 			if -1 == nevents {
-				println("tabby: inotify_observe_collect: EpollWait failed, errno = ",
-					err)
+				tabby_log("inotify_observe_collect: " + strconv.Itoa(err))
 			}
 			break
 		}

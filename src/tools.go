@@ -24,7 +24,7 @@ func gofmt(file string) {
 	}
 	std, error, e := get_output([]string{os.Getenv("GOBIN") + "/gofmt"}, buf)
 	if e != nil {
-		println(e.String())
+		tabby_log(e.String())
 		return
 	}
 	if file == cur_file {

@@ -4,7 +4,6 @@ import (
 	"gtk"
 	"gdk"
 	"file_tree"
-	"flag"
 )
 
 var main_window *gtk.GtkWindow
@@ -317,19 +316,17 @@ func tabby_log(m string) {
 func init_vars() {
 	file_map = make(map[string]*FileRecord)
 	refresh_title()
-	pfocus_line := flag.Int("f", 0, "Focus line")
-	flag.Parse()
-	args := flag.Args()
-	if 0 == len(args) {
+	if 0 == len(tabby_args) {
 		session_restore()
 	}
-	for _, s := range args {
-		open_file_from_args(s, *pfocus_line)
-	}
+	open_files_from_args()
 	file_tree_store()
 }
 
 func main() {
+	if false == init_args() {
+		return
+	}
 	load_options()
 	defer save_options()
 	gtk.Init(nil)

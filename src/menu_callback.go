@@ -100,6 +100,7 @@ func save_as_cb() {
 func exit_cb() {
 	// Are-you-sure-you-want-to-exit-because-file-is-unsaved logic will be here.
 	session_save()
+	listener.Close()
 	gtk.MainQuit()
 }
 
