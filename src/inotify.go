@@ -18,7 +18,7 @@ var epoll_fd int
 
 const NEVENTS int = 1024
 
-func inotify_init() {
+func init_inotify() {
 	var err int
 
 	name_by_wd = make(map[int32]string)
@@ -33,7 +33,7 @@ func inotify_init() {
 	}
 	epoll_fd, err = syscall.EpollCreate(1)
 	if -1 == epoll_fd {
-		tabby_log("inotify_init: " + strconv.Itoa(err))
+		tabby_log("init_inotify: " + strconv.Itoa(err))
 	}
 	var epoll_event syscall.EpollEvent
 	epoll_event.Events = syscall.EPOLLIN

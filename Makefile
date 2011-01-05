@@ -16,7 +16,8 @@ GOFILES=\
 	src/options.go\
 	src/tools.go\
 	src/find_and_replace.go\
-	src/find.go
+	src/find.go\
+	src/lang.go
 
 fix_style:
 	sudo cp ./go.lang /usr/share/gtksourceview-2.0/language-specs/

@@ -76,18 +76,14 @@ func bump_question(m string) (b bool) {
 func init_tabby() {
 	init_navigation()
 	gdk.ThreadsInit()
-	inotify_init()
+	init_inotify()
 
-	lang_man := gtk.SourceLanguageManagerGetDefault()
-	lang := lang_man.GetLanguage("go")
-	if nil == lang.SourceLanguage {
-		tabby_log("warning: no language specification")
-	}
 	source_buf = gtk.SourceBuffer()
-	source_buf.SetLanguage(lang)
 	source_buf.Connect("paste-done", paste_done_cb, nil)
 	source_buf.Connect("mark-set", mark_set_cb, nil)
 	source_buf.Connect("changed", buf_changed_cb, nil)
+
+	init_lang()
 
 	source_buf.CreateTag("instance", map[string]string{"background": "#FF8080"})
 

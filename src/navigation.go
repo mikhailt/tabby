@@ -98,6 +98,7 @@ func file_switch_to(name string) {
 
 	prev_selection = ""
 	mark_set_cb()
+	lang_refresh()
 }
 
 func file_stack_push(name string) {
