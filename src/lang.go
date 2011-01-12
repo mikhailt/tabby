@@ -46,6 +46,8 @@ func init_lang() {
 	lang_map["latex"] = lang_man.GetLanguage("latex")
 	lang_map["tex"] = lang_man.GetLanguage("latex")
 	lang_map["Makefile"] = lang_man.GetLanguage("makefile")
+	lang_map["am"] = lang_man.GetLanguage("makefile")
+	lang_map["in"] = lang_man.GetLanguage("makefile")
 	lang_map["xml"] = lang_man.GetLanguage("xml")
 	lang_map["py"] = lang_man.GetLanguage("python")
 	lang_map["scons"] = lang_man.GetLanguage("python")
