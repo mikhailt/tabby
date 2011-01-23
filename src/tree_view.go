@@ -2,6 +2,7 @@ package main
 
 import (
 	"gtk"
+	"glib"
 	"strings"
 )
 
@@ -39,7 +40,7 @@ func tree_view_get_selected_path(tree_view *gtk.GtkTreeView, tree_model *gtk.Gtk
 	var ans string
 	ans = ""
 	for {
-		var val gtk.GValue
+		var val glib.GValue
 		var next gtk.GtkTreeIter
 		tree_model.GetValue(&iter, col, &val)
 		if shift {
@@ -65,7 +66,7 @@ func tree_view_set_cur_iter(mark bool) {
 	name := cur_file
 	tree_model.GetIterFirst(&cur_iter)
 	for {
-		var val gtk.GValue
+		var val glib.GValue
 		tree_model.GetValue(&cur_iter, 0, &val)
 		whole_string := val.GetString()
 		cur_str := whole_string[1:]

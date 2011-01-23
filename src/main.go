@@ -3,6 +3,7 @@ package main
 import (
 	"gtk"
 	"gdk"
+	"glib"
 	"file_tree"
 )
 
@@ -40,7 +41,7 @@ func refresh_title() {
 		icon = 'B'
 	}
 	if tree_store.IterIsValid(&cur_iter) {
-		var val gtk.GValue
+		var val glib.GValue
 		tree_model.GetValue(&cur_iter, 0, &val)
 		tree_store.Set(&cur_iter, string(icon)+val.GetString()[1:])
 	}
