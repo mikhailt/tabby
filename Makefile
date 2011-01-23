@@ -21,7 +21,9 @@ GOFILES=\
 
 fix_style:
 	sudo cp ./go.lang /usr/share/gtksourceview-2.0/language-specs/
+	sudo chmod 644 /usr/share/gtksourceview-2.0/language-specs/go.lang
 	sudo cp ./classic.xml /usr/share/gtksourceview-2.0/styles/
+	sudo chmod 644 /usr/share/gtksourceview-2.0/styles/classic.xml
 
 build_file_tree:
 	cd ./file_tree && gomake install

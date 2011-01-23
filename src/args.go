@@ -23,7 +23,7 @@ func open_files_from_args() {
 func tabby_server() {
 	var focus_line int
 	buf := make([]byte, 1024)
-	
+
 	for {
 		c, e := listener.Accept()
 		if nil != c {
@@ -33,12 +33,12 @@ func tabby_server() {
 				c.Close()
 				continue
 			}
-			
+
 			// At this point buf contains '\n' separated file names preceeded by focus
 			// line number. Double '\n' at the end of list.
-			
+
 			gdk.ThreadsEnter()
-			
+
 			s := buf[:]
 			for cnt := 0; ; cnt++ {
 				en := strings.Index(string(s), "\n")
@@ -56,24 +56,28 @@ func tabby_server() {
 			new_file := file_stack_pop()
 			file_save_current()
 			file_switch_to(new_file)
-			
+
 			gdk.ThreadsLeave()
-			
+
 			c.Close()
 		} else {
 			tabby_log(e.String())
+			return
 		}
 	}
 }
 
 func provide_tabby_server(cnt int) bool {
+	var e os.Error
+
 	if cnt > 3 {
 		return true
 	}
 	user := os.Getenv("USER")
 	socket_name := "/tmp/tabby-" + user
-	listener, _ = net.Listen("unix", socket_name)
+	listener, e = net.Listen("unix", socket_name)
 	if nil == listener {
+		tabby_log(e.String())
 		// tabby server already exists, trying to connect to it. Or do nothing if
 		// -s (for standalone) was specified or if args are empty.
 		if (0 == len(tabby_args)) || (*pstandalone) {
