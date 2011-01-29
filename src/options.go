@@ -10,6 +10,7 @@ type Options struct {
 	show_error, show_search, space_not_tab          bool
 	ohp_position, ihp_position, vvp_position        int
 	window_width, window_height, window_x, window_y int
+	font string
 }
 
 func new_options() (o Options) {
@@ -20,6 +21,7 @@ func new_options() (o Options) {
 	o.vvp_position = 375
 	o.window_width, o.window_height = 800, 510
 	o.window_x, o.window_y = 0, 0
+	o.font = "Monospace Regular 10"
 	return
 }
 
@@ -50,6 +52,8 @@ func load_options() {
 		case "alloc_window":
 			opt.window_width, opt.window_height, opt.window_x, opt.window_y = atoi(args[1]),
 				atoi(args[2]), atoi(args[3]), atoi(args[4])
+		case "font":
+			opt.font = args[1]
 		}
 	}
 }
@@ -70,6 +74,7 @@ func save_options() {
 	file.WriteString("alloc_window\t" + strconv.Itoa(opt.window_width) + "\t" +
 		strconv.Itoa(opt.window_height) + "\t" + strconv.Itoa(opt.window_x) + "\t" +
 		strconv.Itoa(opt.window_y) + "\n")
+	file.WriteString("font\t" + opt.font + "\n")
 	file.Close()
 }
 
@@ -94,6 +99,8 @@ var opt Options = new_options()
 func window_event_cb() {
 	main_window.GetSize(&opt.window_width, &opt.window_height)
 	main_window.GetPosition(&opt.window_x, &opt.window_y)
+	// TODO: Decide where to place this font change.
+	source_view.ModifyFontEasy(opt.font)
 }
 
 func ohp_cb(pos int) {

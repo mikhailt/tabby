@@ -239,5 +239,11 @@ func gofmt_cb() {
 }
 
 func font_cb() {
-	println("huiak")
+	dialog := gtk.FontSelectionDialog("Pick a font")
+	dialog.SetFontName(opt.font)
+	if gtk.GTK_RESPONSE_OK == dialog.Run() {
+		opt.font = dialog.GetFontName()
+		source_view.ModifyFontEasy(opt.font)
+	}
+	dialog.Destroy()
 }
