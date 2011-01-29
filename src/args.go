@@ -112,7 +112,7 @@ func init_args() bool {
 func pack_tabby_args() string {
 	res := strconv.Itoa(*pfocus_line) + "\n"
 	for _, s := range tabby_args {
-		res += s + "\n"
+		res += prefixed_path(s) + "\n"
 	}
 	res += "\n"
 	return res
@@ -140,16 +140,20 @@ func simplified_path(file string) string {
 	return res
 }
 
-func open_file_from_args(file string, focus_line int) {
+func prefixed_path(file string) string {
 	if '/' != file[0] {
 		// Relative file name.
 		wd, err := os.Getwd()
 		if "" == wd {
 			tabby_log(err.String())
-			return
+		} else {
+			file = wd + "/" + file
 		}
-		file = wd + "/" + file
 	}
+	return file
+}
+
+func open_file_from_args(file string, focus_line int) {
 	file = simplified_path(file)
 	session_open_and_read_file(file)
 	rec, found := file_map[file]
