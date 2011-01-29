@@ -100,7 +100,9 @@ func save_as_cb() {
 func exit_cb() {
 	// Are-you-sure-you-want-to-exit-because-file-is-unsaved logic will be here.
 	session_save()
-	listener.Close()
+	if nil != listener {
+		listener.Close()
+	}
 	gtk.MainQuit()
 }
 
@@ -234,4 +236,8 @@ func notab_chk_cb(current bool) {
 
 func gofmt_cb() {
 	gofmt(cur_file)
+}
+
+func font_cb() {
+	println("huiak")
 }

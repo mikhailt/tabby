@@ -237,25 +237,29 @@ func init_tabby() {
 	gofmtAll_item.AddAccelerator("activate", accel_group, gdk.GDK_F9,
 		gdk.GDK_CONTROL_MASK, gtk.GTK_ACCEL_VISIBLE)
 
-	view_item := gtk.MenuItemWithMnemonic("_View")
-	menubar.Append(view_item)
-	view_submenu := gtk.Menu()
-	view_item.SetSubmenu(view_submenu)
+	options_item := gtk.MenuItemWithMnemonic("_Options")
+	menubar.Append(options_item)
+	options_submenu := gtk.Menu()
+	options_item.SetSubmenu(options_submenu)
 
 	search_chkitem := gtk.CheckMenuItemWithMnemonic("Show _Searchview")
-	view_submenu.Append(search_chkitem)
+	options_submenu.Append(search_chkitem)
 	search_chkitem.SetActive(opt.show_search)
 	search_chkitem.Connect("toggled", func() { search_chk_cb(search_chkitem.GetActive()) }, nil)
 
 	error_chkitem := gtk.CheckMenuItemWithMnemonic("Show _Errorview")
-	view_submenu.Append(error_chkitem)
+	options_submenu.Append(error_chkitem)
 	error_chkitem.SetActive(opt.show_error)
 	error_chkitem.Connect("toggled", func() { error_chk_cb(error_chkitem.GetActive()) }, nil)
 
 	notab_chkitem := gtk.CheckMenuItemWithMnemonic("Spaces for _Tabs")
-	view_submenu.Append(notab_chkitem)
+	options_submenu.Append(notab_chkitem)
 	notab_chkitem.SetActive(opt.space_not_tab)
 	notab_chkitem.Connect("toggled", func() { notab_chk_cb(notab_chkitem.GetActive()) }, nil)
+
+	font_item := gtk.MenuItemWithMnemonic("_Font")
+	options_submenu.Append(font_item)
+	font_item.Connect("activate", font_cb, nil)
 
 	tree_window := gtk.ScrolledWindow(nil, nil)
 	tree_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
