@@ -79,14 +79,16 @@ func session_save() {
 	file.Close()
 }
 
-func session_open_and_read_file(name string) {
+func session_open_and_read_file(name string) bool {
 	read_ok, buf := open_file_read_to_buf(name, false)
 	if false == read_ok {
-		return
+		return false
 	}
 	if add_file_record(name, buf, true) {
 		file_stack_push(name)
+		return true
 	}
+	return false
 }
 
 func session_restore() {

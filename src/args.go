@@ -39,6 +39,7 @@ func tabby_server() {
 
 			gdk.ThreadsEnter()
 
+			opened_cnt := 0
 			s := buf[:]
 			for cnt := 0; ; cnt++ {
 				en := strings.Index(string(s), "\n")
@@ -48,14 +49,18 @@ func tabby_server() {
 				if 0 == cnt {
 					focus_line, _ = strconv.Atoi(string(s[:en]))
 				} else {
-					open_file_from_args(string(s[:en]), focus_line)
+					if open_file_from_args(string(s[:en]), focus_line) {
+						opened_cnt++
+					}
 				}
 				s = s[en+1:]
 			}
-			file_tree_store()
-			new_file := file_stack_pop()
-			file_save_current()
-			file_switch_to(new_file)
+			if opened_cnt > 0 {
+				file_tree_store()
+				new_file := file_stack_pop()
+				file_save_current()
+				file_switch_to(new_file)
+			}
 
 			gdk.ThreadsLeave()
 
@@ -157,9 +162,11 @@ func prefixed_path(file string) string {
 	return file
 }
 
-func open_file_from_args(file string, focus_line int) {
+func open_file_from_args(file string, focus_line int) bool {
 	file = simplified_path(file)
-	session_open_and_read_file(file)
+	if false == session_open_and_read_file(file) {
+	  return false
+	}
 	rec, found := file_map[file]
 	if found {
 		cur_line := 1
@@ -174,5 +181,8 @@ func open_file_from_args(file string, focus_line int) {
 		}
 		rec.sel_be = y
 		rec.sel_en = y
+	} else {
+		return false
 	}
+	return true
 }
