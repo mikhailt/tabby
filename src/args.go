@@ -25,7 +25,7 @@ func tabby_server() {
 	buf := make([]byte, 1024)
 
 	for {
-		c, e := listener.Accept()
+		c, _ := listener.Accept()
 		if nil != c {
 			nread, err := c.Read(buf)
 			if -1 == nread {
@@ -61,7 +61,11 @@ func tabby_server() {
 
 			c.Close()
 		} else {
-			tabby_log(e.String())
+			// Dirty hack! There is no way to distinguish two cases:
+			// 1) Accept returns error because socket was closed on tabby exit.
+			// 2) Real error occured.
+			// Commenting this line out to avoid misleading error messages on exit.
+			//tabby_log(e.String())
 			return
 		}
 	}
