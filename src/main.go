@@ -5,6 +5,7 @@ import (
 	"gdk"
 	"glib"
 	"file_tree"
+	"strconv"
 )
 
 var main_window *gtk.GtkWindow
@@ -119,9 +120,9 @@ func init_tabby() {
 	source_view.SetRightMarginPosition(80)
 	source_view.SetShowRightMargin(true)
 	source_view.SetIndentWidth(2)
+	source_view.SetTabWidth(2)
 	source_view.SetInsertSpacesInsteadOfTabs(opt.space_not_tab)
 	source_view.SetDrawSpaces(gtk.GTK_SOURCE_DRAW_SPACES_TAB)
-	source_view.SetTabWidth(2)
 	source_view.SetSmartHomeEnd(gtk.GTK_SOURCE_SMART_HOME_END_ALWAYS)
 	source_view.SetWrapMode(gtk.GTK_WRAP_WORD)
 
@@ -261,6 +262,39 @@ func init_tabby() {
 	options_submenu.Append(font_item)
 	font_item.Connect("activate", font_cb, nil)
 
+	tabsize_item := gtk.MenuItemWithMnemonic("_Tab size")
+	options_submenu.Append(tabsize_item)
+	tabsize_submenu := gtk.Menu()
+	tabsize_item.SetSubmenu(tabsize_submenu)
+	const tabsize_cnt = 8
+	tabsize_chk := make([]*gtk.GtkCheckMenuItem, tabsize_cnt)
+	for y := 0; y < tabsize_cnt; y++ {
+		tabsize_chk[y] = gtk.CheckMenuItemWithMnemonic(strconv.Itoa(y + 1))
+		tabsize_submenu.Append(tabsize_chk[y])
+		cur_ind := y
+		tabsize_chk[y].Connect("activate", func() {
+			if false == tabsize_chk[cur_ind].GetActive() {
+				active_cnt := 0
+				for j := 0; j < tabsize_cnt; j++ {
+					if tabsize_chk[j].GetActive() {
+						active_cnt++
+					}
+				}
+				if 0 == active_cnt {
+					tabsize_chk[cur_ind].SetActive(true)
+				}
+				return
+			}
+			for j := 0; j < tabsize_cnt; j++ {
+				if j != cur_ind {
+					tabsize_chk[j].SetActive(false)
+				}
+			}
+			options_set_tabsize(cur_ind + 1)
+		},
+			nil)
+	}
+
 	tree_window := gtk.ScrolledWindow(nil, nil)
 	tree_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
 	inner_hpaned.Add1(tree_window)
@@ -296,7 +330,7 @@ func init_tabby() {
 	main_window.Connect("destroy", exit_cb, "")
 	main_window.Connect("configure-event", window_event_cb, "")
 	main_window.Add(vbox)
-	// init_tabby blocks for some reason if called after ShowAll.
+	// init_tabby blocks for some reason when is called after ShowAll.
 	init_vars()
 	main_window.ShowAll()
 	search_window.SetVisible(opt.show_search)

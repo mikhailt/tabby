@@ -10,7 +10,8 @@ type Options struct {
 	show_error, show_search, space_not_tab          bool
 	ohp_position, ihp_position, vvp_position        int
 	window_width, window_height, window_x, window_y int
-	font string
+	font                                            string
+	tabsize                                         int
 }
 
 func new_options() (o Options) {
@@ -22,6 +23,7 @@ func new_options() (o Options) {
 	o.window_width, o.window_height = 800, 510
 	o.window_x, o.window_y = 0, 0
 	o.font = "Monospace Regular 10"
+	o.tabsize = 2
 	return
 }
 
@@ -54,6 +56,8 @@ func load_options() {
 				atoi(args[2]), atoi(args[3]), atoi(args[4])
 		case "font":
 			opt.font = args[1]
+		case "tabsize":
+			opt.tabsize = atoi(args[1])
 		}
 	}
 }
@@ -75,6 +79,7 @@ func save_options() {
 		strconv.Itoa(opt.window_height) + "\t" + strconv.Itoa(opt.window_x) + "\t" +
 		strconv.Itoa(opt.window_y) + "\n")
 	file.WriteString("font\t" + opt.font + "\n")
+	file.WriteString("tabsize\t" + strconv.Itoa(opt.tabsize) + "\n")
 	file.Close()
 }
 
@@ -99,8 +104,9 @@ var opt Options = new_options()
 func window_event_cb() {
 	main_window.GetSize(&opt.window_width, &opt.window_height)
 	main_window.GetPosition(&opt.window_x, &opt.window_y)
-	// TODO: Decide where to place this font change.
+	// TODO: Decide where to place these initialization.
 	source_view.ModifyFontEasy(opt.font)
+	options_set_tabsize(opt.tabsize)
 }
 
 func ohp_cb(pos int) {
@@ -113,4 +119,10 @@ func ihp_cb(pos int) {
 
 func vvp_cb(pos int) {
 	opt.vvp_position = pos
+}
+
+func options_set_tabsize(s int) {
+	opt.tabsize = s
+	source_view.SetIndentWidth(s)
+	source_view.SetTabWidth(uint(s))
 }
