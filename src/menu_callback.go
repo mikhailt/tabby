@@ -116,7 +116,18 @@ func close_cb() {
 	}
 	if close_it {
 		delete_file_record(cur_file)
-		file_switch_to(file_stack_pop())
+		cur_file = file_stack_pop()
+		if 0 == len(file_map) {
+			new_cb()
+		}
+		if "" == cur_file {
+			// Choose random open file then. Previous if implies that there are some 
+			// opened files. At least unsaved.
+			for cur_file, _ = range file_map {
+				break
+			}
+		}
+		file_switch_to(cur_file)
 		file_tree_store()
 	}
 }
