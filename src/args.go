@@ -56,6 +56,7 @@ func tabby_server() {
 				s = s[en+1:]
 			}
 			if opened_cnt > 0 {
+				main_window.Present()
 				file_tree_store()
 				new_file := file_stack_pop()
 				file_save_current()
