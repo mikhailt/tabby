@@ -164,7 +164,10 @@ func prefixed_path(file string) string {
 }
 
 func open_file_from_args(file string, focus_line int) bool {
-	split_file := strings.Split(file, ":", 3)
+	split_file := strings.Split(file, ":", 2)
+	if len(split_file) >= 2 {
+		focus_line, _ = strconv.Atoi(split_file[1])
+	}
 	file = simplified_path(split_file[0])
 	if false == session_open_and_read_file(file) {
 	  return false
@@ -185,12 +188,6 @@ func open_file_from_args(file string, focus_line int) bool {
 		rec.sel_en = y
 	} else {
 		return false
-	}
-	if len(split_file) >= 2 {
-		rec.sel_be, _ = strconv.Atoi(split_file[1])
-	}
-	if len(split_file) >= 3 {
-		rec.sel_en, _ = strconv.Atoi(split_file[2])
 	}
 	return true
 }
