@@ -28,8 +28,8 @@ func tabby_server() {
 		c, _ := listener.Accept()
 		if nil != c {
 			nread, err := c.Read(buf)
-			if -1 == nread {
-				tabby_log(err.String())
+			if 0 >= nread {
+				tabby_log("server: read from unix socket: " + err.String())
 				c.Close()
 				continue
 			}
@@ -77,32 +77,35 @@ func tabby_server() {
 	}
 }
 
+// Returns true if start of real tabby instance required and false o/w.
+// In case of false sends arguments to tabby server.
 func provide_tabby_server(cnt int) bool {
-	var e os.Error
-
 	if cnt > 3 {
+		return true
+	}
+	if *pstandalone {
 		return true
 	}
 	user := os.Getenv("USER")
 	socket_name := "/tmp/tabby-" + user
-	listener, e = net.Listen("unix", socket_name)
+	listener, _ = net.Listen("unix", socket_name)
 	if nil == listener {
-		tabby_log(e.String())
-		// tabby server already exists, trying to connect to it. Or do nothing if
-		// -s (for standalone) was specified or if args are empty.
-		if (0 == len(tabby_args)) || (*pstandalone) {
-			return true
-		}
+		// Assume that socket or file with such name already exists.
 		conn, _ := net.Dial("unix", "", socket_name)
 		if nil == conn {
-			// Server exists but we cannot connect to it. Delete socket file then
+			// Socket exists but we cannot connect to it. Delete socket file then
 			// and repeat the logic.
 			os.Remove(socket_name)
 			return provide_tabby_server(cnt + 1)
 		}
 		// Dial succeeded.
-		conn.Write([]byte(pack_tabby_args()))
-		conn.Close()
+		for y := 0; y < len(tabby_args); y++ {
+			println(tabby_args[y])
+		}
+		defer conn.Close()
+		if len(tabby_args) > 0 {
+			conn.Write([]byte(pack_tabby_args()))
+		}
 		return false
 	}
 	// Ok, this instance of tabby becomes a server.
