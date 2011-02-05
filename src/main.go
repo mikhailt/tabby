@@ -20,10 +20,7 @@ var tree_view *gtk.GtkTreeView
 var tree_store *gtk.GtkTreeStore
 var tree_model *gtk.GtkTreeModel
 
-var search_view *gtk.GtkTreeView
-var search_store *gtk.GtkTreeStore
-var search_model *gtk.GtkTreeModel
-var search_window *gtk.GtkScrolledWindow
+var search_view SearchView
 
 var cur_file string = ""
 var cur_iter gtk.GtkTreeIter
@@ -80,6 +77,8 @@ func init_tabby() {
 	gdk.ThreadsInit()
 	init_inotify()
 
+	search_view.Init()
+
 	source_buf = gtk.SourceBuffer()
 	source_buf.Connect("paste-done", paste_done_cb, nil)
 	source_buf.Connect("mark-set", mark_set_cb, nil)
@@ -96,16 +95,6 @@ func init_tabby() {
 	tree_view.SetModel(tree_model)
 	tree_view.SetHeadersVisible(false)
 	tree_view.Connect("cursor-changed", tree_view_select_cb, nil)
-
-	search_store = gtk.TreeStore(gtk.TYPE_STRING)
-	search_view = file_tree.NewSearchTree()
-	search_view.ModifyFontEasy("Regular 8")
-	search_model = search_store.ToTreeModel()
-	search_view.SetModel(search_model)
-	search_view.AppendColumn(gtk.TreeViewColumnWithAttributes(
-		"", gtk.CellRendererText(), "text", 0))
-	search_view.SetHeadersVisible(false)
-	search_view.Connect("cursor-changed", search_view_select_cb, nil)
 
 	error_view = gtk.TextView()
 	error_view.ModifyFontEasy("Monospace Regular 8")
@@ -195,6 +184,18 @@ func init_tabby() {
 	navigation_submenu.Append(next_instance_item)
 	next_instance_item.Connect("activate", next_instance_cb, nil)
 	next_instance_item.AddAccelerator("activate", accel_group, gdk.GDK_F3,
+		0, gtk.GTK_ACCEL_VISIBLE)
+
+	prev_result_item := gtk.MenuItemWithMnemonic("Prev search result")
+	navigation_submenu.Append(prev_result_item)
+	prev_result_item.Connect("activate", func() {search_view.PrevResult()}, nil)
+	prev_result_item.AddAccelerator("activate", accel_group, gdk.GDK_F4,
+		0, gtk.GTK_ACCEL_VISIBLE)
+
+	next_result_item := gtk.MenuItemWithMnemonic("Next search result")
+	navigation_submenu.Append(next_result_item)
+	next_result_item.Connect("activate", func() {search_view.NextResult()}, nil)
+	next_result_item.AddAccelerator("activate", accel_group, gdk.GDK_F5,
 		0, gtk.GTK_ACCEL_VISIBLE)
 
 	find_item := gtk.MenuItemWithMnemonic("_Find")
@@ -300,10 +301,7 @@ func init_tabby() {
 	inner_hpaned.Add1(tree_window)
 	tree_window.Add(tree_view)
 
-	search_window = gtk.ScrolledWindow(nil, nil)
-	search_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
-	outer_hpaned.Add2(search_window)
-	search_window.Add(search_view)
+	outer_hpaned.Add2(search_view.window)
 
 	text_window := gtk.ScrolledWindow(nil, nil)
 	text_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_ALWAYS)
@@ -333,7 +331,6 @@ func init_tabby() {
 	// init_tabby blocks for some reason when is called after ShowAll.
 	init_vars()
 	main_window.ShowAll()
-	search_window.SetVisible(opt.show_search)
 	error_window.SetVisible(opt.show_error)
 	// Cannot be called before ShowAll. This is also not clear.
 	file_switch_to(file_stack_pop())

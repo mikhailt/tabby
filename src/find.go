@@ -7,14 +7,13 @@ import (
 )
 
 func find_global(pattern string, find_file bool) {
-	var iter gtk.GtkTreeIter
 	var pos int
 	if find_file {
 		prev_pattern = ""
 	} else {
 		prev_pattern = pattern
 	}
-	search_store.Clear()
+	search_view.store.Clear()
 	for name, rec := range file_map {
 		if find_file {
 			pos = strings.Index(name, pattern)
@@ -26,16 +25,19 @@ func find_global(pattern string, find_file bool) {
 			pos = strings.Index(string(rec.buf), pattern)
 		}
 		if -1 != pos {
-			search_store.Append(&iter, nil)
-			search_store.Set(&iter, name)
+			search_view.AddFile(name)
 		}
 	}
 }
 
 func find_cb() {
+	found_in_cur_file := false
 	dialog_ok, pattern, global, find_file := find_dialog()
 	if false == dialog_ok {
 		return
+	}
+	if global {
+		search_view.PrepareToSearch()
 	}
 	if find_file {
 		find_global(pattern, true)
@@ -43,22 +45,26 @@ func find_cb() {
 		if global {
 			find_global(pattern, false)
 		}
-		find_in_current_file(pattern, global)
+		found_in_cur_file = find_in_current_file(pattern, global)
+	}
+	if global && !found_in_cur_file {
+		search_view.SetCursor(0)
 	}
 }
 
-func find_in_current_file(pattern string, global bool) {
+// Returns true if pattern was found in current file, false o/w.
+func find_in_current_file(pattern string, global bool) bool {
 	var be, en gtk.GtkTextIter
 	source_buf.GetSelectionBounds(&be, &en)
 	if find_next_instance(&en, &be, &en, pattern) {
 		move_focus_and_selection(&be, &en)
 		mark_set_cb()
 		if global {
-			var iter gtk.GtkTreeIter
-			search_store.Append(&iter, nil)
-			search_store.Set(&iter, cur_file)
+			search_view.AddFile(cur_file)
 		}
+		return true
 	}
+	return false
 }
 
 func find_dialog() (bool, string, bool, bool) {

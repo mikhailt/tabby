@@ -17,7 +17,7 @@ var file_stack_top = 0
 var file_stack_base = 0
 var file_stack_max = 0
 
-var prev_global bool = false
+var prev_global bool = true
 var prev_pattern string = ""
 
 var accel_group *gtk.GtkAccelGroup = nil

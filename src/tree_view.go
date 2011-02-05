@@ -18,16 +18,6 @@ func tree_view_select_cb() {
 	file_switch_to(sel_file)
 }
 
-func search_view_select_cb() {
-	file := tree_view_get_selected_path(search_view, search_model, 0, false)
-	file_save_current()
-	file_switch_to(file)
-	tree_view_scroll_to_cur_iter()
-	if "" != prev_pattern {
-		find_in_current_file(prev_pattern, false)
-	}
-}
-
 func tree_view_get_selected_path(tree_view *gtk.GtkTreeView, tree_model *gtk.GtkTreeModel, col int, shift bool) string {
 	var path *gtk.GtkTreePath
 	var column *gtk.GtkTreeViewColumn

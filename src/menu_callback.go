@@ -236,7 +236,7 @@ func error_chk_cb(current bool) {
 }
 
 func search_chk_cb(current bool) {
-	search_window.SetVisible(current)
+	search_view.window.SetVisible(current)
 	opt.show_search = current
 }
 
