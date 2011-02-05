@@ -32,6 +32,9 @@ func (v *SearchView) Init() {
 
 func (v *SearchView) Select() {
 	file := tree_view_get_selected_path(v.view, v.model, 0, false)
+	if !file_opened(file) {
+		return
+	}
 	file_save_current()
 	file_switch_to(file)
 	tree_view_scroll_to_cur_iter()
