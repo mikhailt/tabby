@@ -1,7 +1,7 @@
 package main
 
 import (
-	"os"
+  "os"
 	"io"
 	"bytes"
 	"gtk"
@@ -63,7 +63,7 @@ func get_output(args []string, input []byte) (std []byte, error []byte, e os.Err
 	if err != nil {
 		return nil, nil, err
 	}
-	pid, err := os.ForkExec(args[0], args, os.Environ(), "", []*os.File{inpr, stdw, errw})
+	pid, err := os.StartProcess(args[0], args, os.Environ(), "", []*os.File{inpr, stdw, errw})
 
 	if err != nil {
 		return nil, nil, err
@@ -84,6 +84,6 @@ func get_output(args []string, input []byte) (std []byte, error []byte, e os.Err
 	inpr.Close()
 	stdr.Close()
 	errr.Close()
-	os.Wait(pid, 0)
+	pid.Wait(0)
 	return
 }
