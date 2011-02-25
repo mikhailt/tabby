@@ -36,7 +36,7 @@ func init_lang() {
 	lang_map = make(map[string]*gtk.GtkSourceLanguage)
 	lang_map["go"] = lang_man.GetLanguage("go")
 	lang_map["c"] = lang_man.GetLanguage("c")
-	lang_map["h"] = lang_man.GetLanguage("c")
+	lang_map["h"] = lang_man.GetLanguage("cpp")
 	lang_map["sh"] = lang_man.GetLanguage("sh")
 	lang_map["diff"] = lang_man.GetLanguage("diff")
 	lang_map["patch"] = lang_man.GetLanguage("diff")
