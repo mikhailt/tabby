@@ -214,7 +214,7 @@ func file_chooser_dialog(t int) (bool, string) {
 		action = gtk.GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER
 		ok_stock = gtk.GTK_STOCK_OPEN
 	}
-	dialog := gtk.FileChooserDialog2("", source_view.GetTopLevelAsWindow(),
+	dialog := gtk.FileChooserDialog("", source_view.GetTopLevelAsWindow(),
 		action,
 		gtk.GTK_STOCK_CANCEL, gtk.GTK_RESPONSE_CANCEL,
 		ok_stock, gtk.GTK_RESPONSE_ACCEPT)
