@@ -66,7 +66,7 @@ func get_output(args []string, input []byte) (std []byte, error []byte, e os.Err
 	pid, err := os.StartProcess(args[0], args, &os.ProcAttr{
 	  Dir:	".",
 	  Env:	os.Environ(),
-	  Files: []*os.File{nil, nil, nil},
+	  Files: []*os.File{inpr, stdw, errw},
 	})
 
 	if err != nil {
