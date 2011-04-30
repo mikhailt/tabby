@@ -63,7 +63,7 @@ func load_options() {
 }
 
 func save_options() {
-	file, _ := os.Open(os.Getenv("HOME")+"/.tabbyoptions", os.O_CREAT|os.O_WRONLY, 0644)
+	file, _ := os.OpenFile(os.Getenv("HOME")+"/.tabbyoptions", os.O_CREATE|os.O_WRONLY, 0644)
 	if nil == file {
 		tabby_log("unable to save options")
 		return

@@ -91,7 +91,7 @@ func provide_tabby_server(cnt int) bool {
 	listener, _ = net.Listen("unix", socket_name)
 	if nil == listener {
 		// Assume that socket or file with such name already exists.
-		conn, _ := net.Dial("unix", "", socket_name)
+		conn, _ := net.Dial("unix", socket_name)
 		if nil == conn {
 			// Socket exists but we cannot connect to it. Delete socket file then
 			// and repeat the logic.

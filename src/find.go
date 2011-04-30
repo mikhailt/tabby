@@ -71,9 +71,9 @@ func find_dialog() (bool, string, bool, bool) {
 	dialog := gtk.Dialog()
 	defer dialog.Destroy()
 	dialog.SetTitle("Find")
-	dialog.AddButton("_Find", gtk.GTK_RESPONSE_ACCEPT)
-	dialog.AddButton("_Cancel", gtk.GTK_RESPONSE_CANCEL)
-	w := dialog.GetWidgetForResponse(gtk.GTK_RESPONSE_ACCEPT)
+	dialog.AddButton("_Find", int(gtk.GTK_RESPONSE_ACCEPT))
+	dialog.AddButton("_Cancel", int(gtk.GTK_RESPONSE_CANCEL))
+	w := dialog.GetWidgetForResponse(int(gtk.GTK_RESPONSE_ACCEPT))
 	dialog.AddAccelGroup(accel_group)
 	w.AddAccelerator("clicked", accel_group, gdk.GDK_Return,
 		0, gtk.GTK_ACCEL_VISIBLE)
@@ -87,7 +87,7 @@ func find_dialog() (bool, string, bool, bool) {
 	vbox.Add(entry)
 	vbox.Add(global_button)
 	vbox.Add(file_button)
-	if gtk.GTK_RESPONSE_ACCEPT == dialog.Run() {
+	if int(gtk.GTK_RESPONSE_ACCEPT) == dialog.Run() {
 		entry_text := entry.GetActiveText()
 		if nil == search_history {
 			search_history = make([]string, 1)
