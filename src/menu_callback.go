@@ -42,7 +42,7 @@ func open_rec_cb() {
 	if false == dialog_ok {
 		return
 	}
-	dir, _ := os.Open(dialog_dir, os.O_RDONLY, 0)
+	dir, _ := os.OpenFile(dialog_dir, os.O_RDONLY, 0)
 	if nil == dir {
 		bump_message("Unable to open directory " + dialog_dir)
 	}
@@ -58,7 +58,7 @@ func save_cb() {
 	}
 	inotify_rm_watch(cur_file)
 	defer inotify_add_watch(cur_file)
-	file, _ := os.Open(cur_file, os.O_CREAT|os.O_WRONLY, 0644)
+	file, _ := os.OpenFile(cur_file, os.O_CREATE|os.O_WRONLY, 0644)
 	if nil == file {
 		bump_message("Unable to open file for writing: " + cur_file)
 		return
@@ -142,7 +142,7 @@ func paste_done_cb() {
 
 // Reads file content to newly allocated buffer.
 func open_file_read_to_buf(name string, verbose bool) (bool, []byte) {
-	file, _ := os.Open(name, os.O_RDONLY, 0644)
+	file, _ := os.OpenFile(name, os.O_RDONLY, 0644)
 	if nil == file {
 		bump_message("Unable to open file for reading: " + name)
 		return false, nil
@@ -183,7 +183,7 @@ func open_dir(dir *os.File, dir_name string, recursively bool) {
 		}
 		if fi.IsDirectory() {
 			if recursively {
-				child_dir, _ := os.Open(abs_name, os.O_RDONLY, 0)
+				child_dir, _ := os.OpenFile(abs_name, os.O_RDONLY, 0)
 				if nil != child_dir {
 					open_dir(child_dir, abs_name, true)
 				}
@@ -202,7 +202,7 @@ const (
 )
 
 func file_chooser_dialog(t int) (bool, string) {
-	var action int
+	var action gtk.GtkFileChooserAction
 	var ok_stock string
 	if OPEN_DIALOG == t {
 		action = gtk.GTK_FILE_CHOOSER_ACTION_OPEN
@@ -216,14 +216,14 @@ func file_chooser_dialog(t int) (bool, string) {
 	}
 	dialog := gtk.FileChooserDialog("", source_view.GetTopLevelAsWindow(),
 		action,
-		gtk.GTK_STOCK_CANCEL, gtk.GTK_RESPONSE_CANCEL,
-		ok_stock, gtk.GTK_RESPONSE_ACCEPT)
+		gtk.GTK_STOCK_CANCEL, int(gtk.GTK_RESPONSE_CANCEL),
+		ok_stock, int(gtk.GTK_RESPONSE_ACCEPT))
 	dialog.SetCurrentFolder(prev_dir)
 	res := dialog.Run()
 	dialog_folder := dialog.GetCurrentFolder()
 	dialog_file := dialog.GetFilename()
 	dialog.Destroy()
-	if gtk.GTK_RESPONSE_ACCEPT == res {
+	if int(gtk.GTK_RESPONSE_ACCEPT) == res {
 		prev_dir = dialog_folder
 		return true, dialog_file
 	}
@@ -252,7 +252,7 @@ func gofmt_cb() {
 func font_cb() {
 	dialog := gtk.FontSelectionDialog("Pick a font")
 	dialog.SetFontName(opt.font)
-	if gtk.GTK_RESPONSE_OK == dialog.Run() {
+	if int(gtk.GTK_RESPONSE_OK) == dialog.Run() {
 		opt.font = dialog.GetFontName()
 		source_view.ModifyFontEasy(opt.font)
 	}

@@ -28,10 +28,10 @@ func fnr_dialog() {
 
 	dialog := gtk.Dialog()
 	dialog.SetTitle("Find and Replace")
-	dialog.AddButton("_Find Next", gtk.GTK_RESPONSE_OK)
-	dialog.AddButton("_Replace", gtk.GTK_RESPONSE_YES)
-	dialog.AddButton("Replace _All", gtk.GTK_RESPONSE_APPLY)
-	dialog.AddButton("_Close", gtk.GTK_RESPONSE_CLOSE)
+	dialog.AddButton("_Find Next", int(gtk.GTK_RESPONSE_OK))
+	dialog.AddButton("_Replace", int(gtk.GTK_RESPONSE_YES))
+	dialog.AddButton("Replace _All", int(gtk.GTK_RESPONSE_APPLY))
+	dialog.AddButton("_Close", int(gtk.GTK_RESPONSE_CLOSE))
 	dialog.AddAccelGroup(accel_group)
 
 	entry := find_entry_with_history()
@@ -46,10 +46,10 @@ func fnr_dialog() {
 	vbox.Add(replacement)
 	vbox.Add(global_button)
 
-	find_next_button := dialog.GetWidgetForResponse(gtk.GTK_RESPONSE_OK)
-	replace_button := dialog.GetWidgetForResponse(gtk.GTK_RESPONSE_YES)
-	replace_all_button := dialog.GetWidgetForResponse(gtk.GTK_RESPONSE_APPLY)
-	close_button := dialog.GetWidgetForResponse(gtk.GTK_RESPONSE_CLOSE)
+	find_next_button := dialog.GetWidgetForResponse(int(gtk.GTK_RESPONSE_OK))
+	replace_button := dialog.GetWidgetForResponse(int(gtk.GTK_RESPONSE_YES))
+	replace_all_button := dialog.GetWidgetForResponse(int(gtk.GTK_RESPONSE_APPLY))
+	close_button := dialog.GetWidgetForResponse(int(gtk.GTK_RESPONSE_CLOSE))
 
 	find_next_button.Connect("clicked", func() {
 		fnr_pre_cb(global_button, &insert_set)

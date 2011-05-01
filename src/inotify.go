@@ -141,14 +141,14 @@ func inotify_dialog(s map[string]int) bool {
 	inotify_dlg := gtk.Dialog()
 	defer inotify_dlg.Destroy()
 	inotify_dlg.SetTitle("Some files have beed modified outside of tabby")
-	inotify_dlg.AddButton("_Reload all", gtk.GTK_RESPONSE_ACCEPT)
-	inotify_dlg.AddButton("_Keep all as is", gtk.GTK_RESPONSE_CANCEL)
-	w := inotify_dlg.GetWidgetForResponse(gtk.GTK_RESPONSE_ACCEPT)
+	inotify_dlg.AddButton("_Reload all", int(gtk.GTK_RESPONSE_ACCEPT))
+	inotify_dlg.AddButton("_Keep all as is", int(gtk.GTK_RESPONSE_CANCEL))
+	w := inotify_dlg.GetWidgetForResponse( int(gtk.GTK_RESPONSE_ACCEPT))
 	inotify_dlg.AddAccelGroup(accel_group)
 	w.AddAccelerator("clicked", accel_group, gdk.GDK_Return,
 		0, gtk.GTK_ACCEL_VISIBLE)
 	inotify_dlg.SetSizeRequest(800, 350)
-	inotify_store := gtk.TreeStore(gtk.TYPE_STRING)
+	inotify_store := gtk.TreeStore(gtk.GTK_TYPE_STRING)
 	inotify_view := gtk.TreeView()
 	inotify_view.AppendColumn(
 		gtk.TreeViewColumnWithAttributes("text", gtk.CellRendererText(), "text", 0))
@@ -168,7 +168,7 @@ func inotify_dialog(s map[string]int) bool {
 	view_window.Add(inotify_view)
 	vbox := inotify_dlg.GetVBox()
 	vbox.Add(view_window)
-	if gtk.GTK_RESPONSE_ACCEPT == inotify_dlg.Run() {
+	if int(gtk.GTK_RESPONSE_ACCEPT) == inotify_dlg.Run() {
 		return true
 	}
 	return false
