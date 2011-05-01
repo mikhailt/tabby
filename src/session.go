@@ -67,7 +67,7 @@ func get_file_info(file string) string {
 
 func session_save() {
 	file_save_current()
-	file, _ := os.Open(os.Getenv("HOME")+"/.tabby", os.O_CREAT|os.O_WRONLY, 0644)
+	file, _ := os.OpenFile(os.Getenv("HOME")+"/.tabby", os.O_CREATE|os.O_WRONLY, 0644)
 	if nil == file {
 		tabby_log("unable to save session")
 		return
@@ -121,7 +121,7 @@ func session_restore() {
 }
 
 func take_reader_from_file(name string) (*bufio.Reader, *os.File) {
-	file, _ := os.Open(name, os.O_CREAT|os.O_RDONLY, 0644)
+	file, _ := os.OpenFile(name, os.O_CREATE|os.O_RDONLY, 0644)
 	if nil == file {
 		tabby_log("unable to Open file for reading: " + name)
 		return nil, nil

@@ -15,7 +15,7 @@ type SearchView struct {
 }
 
 func (v *SearchView) Init() {
-	v.store = gtk.TreeStore(gtk.TYPE_STRING)
+	v.store = gtk.TreeStore(gtk.GTK_TYPE_STRING)
 	v.view = file_tree.NewSearchTree()
 	v.view.ModifyFontEasy("Regular 8")
 	v.model = v.store.ToTreeModel()
