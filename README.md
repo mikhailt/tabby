@@ -6,15 +6,13 @@ tabby
 
 SCREENSHOT:
 -----------
-Saturday, April 30, 2011 16:04
-Forked from github.com/mikhailt/tabby.
 ![tabby!](https://github.com/mikhailt/tabby/raw/gh-pages/tabby.png "tabby!")
 
 DEPENDENCIES:
 --------
-  go
-  go-gtk
-  libgtk2.0-dev
+  go\
+  go-gtk\
+  libgtk2.0-dev\
   libgtksourceview2.0-dev
 
 BUILD:
