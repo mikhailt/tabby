@@ -16,7 +16,7 @@ var pstandalone *bool
 
 func open_files_from_args() {
 	for _, s := range tabby_args {
-		open_file_from_args(s, *pfocus_line)
+		open_file_from_args(prefixed_path(s), *pfocus_line)
 	}
 }
 
@@ -113,6 +113,7 @@ func provide_tabby_server(cnt int) bool {
 	return true
 }
 
+// Returns true/false whether new instance of tabby editor have to be spawned.
 func init_args() bool {
 	pfocus_line = flag.Int("f", 1, "Focus line")
 	pstandalone = flag.Bool("s", false, "Forces to open new instance of tabby.")
