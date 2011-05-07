@@ -186,7 +186,7 @@ func fnr_find_next(pattern string, global bool, map_filled *bool, m *map[string]
 		move_focus_and_selection(&be, &en)
 		return true
 	}
-	// Have to switch to next file or to start of current depending on <global>.
+	// Have to switch to next file or to beginning of current depending on <global>.
 	if global {
 		// Switch to next file.
 		fnr_find_next_fill_global_map(pattern, m, map_filled)
@@ -202,14 +202,16 @@ func fnr_find_next(pattern string, global bool, map_filled *bool, m *map[string]
 		source_buf.MoveMarkByName("selection_bound", &be)
 		return fnr_find_next(pattern, global, map_filled, m)
 	} else {
+		// Temporary fix. Is there necessity to search the document all over again?
+		return false
 		// Start search from beginning of scope.
-		get_iter_at_mark_by_name("fnr_be", &be)
-		if be.ForwardSearch(pattern, 0, &be, &en, &scope_en) {
-			move_focus_and_selection(&be, &en)
-			return true
-		} else {
-			return false
-		}
+		// get_iter_at_mark_by_name("fnr_be", &be)
+		// if be.ForwardSearch(pattern, 0, &be, &en, &scope_en) {
+		//	move_focus_and_selection(&be, &en)
+		//	return true
+		//} else {
+		//	return false
+		//}
 	}
 	return false
 }
@@ -230,12 +232,17 @@ func fnr_find_next_fill_global_map(pattern string, m *map[string]int, map_filled
 	}
 }
 
+
+// Returns (done, next_found)
 func fnr_replace(entry string, replacement string, global bool, map_filled *bool, global_map *map[string]int) (int, bool) {
 	if entry != source_selection() {
 		return 0, true
 	}
 	source_buf.DeleteSelection(false, true)
 	source_buf.InsertAtCursor(replacement)
+	var be, en gtk.GtkTextIter
+	source_buf.GetSelectionBounds(&be, &en)
+	source_buf.MoveMarkByName("insert", &en)
 	return 1, fnr_find_next(entry, global, map_filled, global_map)
 }
 
