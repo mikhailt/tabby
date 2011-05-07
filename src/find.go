@@ -31,8 +31,16 @@ func find_global(pattern string, find_file bool) {
 }
 
 func find_cb() {
+	find_common(false)
+}
+
+func find_file_cb() {
+	find_common(true)
+}
+
+func find_common(find_file bool) {
 	found_in_cur_file := false
-	dialog_ok, pattern, global, find_file := find_dialog()
+	dialog_ok, pattern, global, find_file := find_dialog(find_file)
 	if false == dialog_ok {
 		return
 	}
@@ -52,6 +60,8 @@ func find_cb() {
 	}
 }
 
+
+
 // Returns true if pattern was found in current file, false o/w.
 func find_in_current_file(pattern string, global bool) bool {
 	var be, en gtk.GtkTextIter
@@ -67,7 +77,7 @@ func find_in_current_file(pattern string, global bool) bool {
 	return false
 }
 
-func find_dialog() (bool, string, bool, bool) {
+func find_dialog(find_file bool) (bool, string, bool, bool) {
 	dialog := gtk.Dialog()
 	defer dialog.Destroy()
 	dialog.SetTitle("Find")
@@ -83,6 +93,7 @@ func find_dialog() (bool, string, bool, bool) {
 	global_button.SetActive(prev_global)
 	file_button := gtk.CheckButtonWithLabel("Find file by name pattern")
 	file_button.SetVisible(true)
+	file_button.SetActive(find_file)
 	vbox := dialog.GetVBox()
 	vbox.Add(entry)
 	vbox.Add(global_button)

@@ -204,6 +204,12 @@ func init_tabby() {
 	find_item.AddAccelerator("activate", accel_group, gdk.GDK_f,
 		int(gdk.GDK_CONTROL_MASK), gtk.GTK_ACCEL_VISIBLE)
 
+	find_file_item := gtk.MenuItemWithMnemonic("_Find file")
+	navigation_submenu.Append(find_file_item)
+	find_file_item.Connect("activate", find_file_cb, nil)
+	find_file_item.AddAccelerator("activate", accel_group, gdk.GDK_d,
+		int(gdk.GDK_CONTROL_MASK), gtk.GTK_ACCEL_VISIBLE)
+
 	fnr_item := gtk.MenuItemWithMnemonic("Find and Replace")
 	navigation_submenu.Append(fnr_item)
 	fnr_item.Connect("activate", fnr_cb, nil)
