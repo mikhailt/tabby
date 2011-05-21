@@ -145,7 +145,7 @@ func inotify_dialog(s map[string]int) bool {
 	inotify_dlg.AddButton("_Keep all as is", int(gtk.GTK_RESPONSE_CANCEL))
 	w := inotify_dlg.GetWidgetForResponse( int(gtk.GTK_RESPONSE_ACCEPT))
 	inotify_dlg.AddAccelGroup(accel_group)
-	w.AddAccelerator("clicked", accel_group, gdk.GDK_Return,
+	w.AddAccelerator("clicked", accel_group, gdk.GDK_KEY_Return,
 		0, gtk.GTK_ACCEL_VISIBLE)
 	inotify_dlg.SetSizeRequest(800, 350)
 	inotify_store := gtk.TreeStore(gtk.GTK_TYPE_STRING)

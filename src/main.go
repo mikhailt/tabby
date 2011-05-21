@@ -136,13 +136,13 @@ func init_tabby() {
 	new_item := gtk.MenuItemWithMnemonic("_New")
 	file_submenu.Append(new_item)
 	new_item.Connect("activate", new_cb, nil)
-	new_item.AddAccelerator("activate", accel_group, gdk.GDK_n,
+	new_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_n,
 		int(gdk.GDK_CONTROL_MASK), gtk.GTK_ACCEL_VISIBLE)
 
 	open_item := gtk.MenuItemWithMnemonic("_Open")
 	file_submenu.Append(open_item)
 	open_item.Connect("activate", open_cb, nil)
-	open_item.AddAccelerator("activate", accel_group, gdk.GDK_o,
+	open_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_o,
 		int(gdk.GDK_CONTROL_MASK), gtk.GTK_ACCEL_VISIBLE)
 
 	open_rec_item := gtk.MenuItemWithMnemonic("Open _Recursively")
@@ -152,7 +152,7 @@ func init_tabby() {
 	save_item := gtk.MenuItemWithMnemonic("_Save")
 	file_submenu.Append(save_item)
 	save_item.Connect("activate", save_cb, nil)
-	save_item.AddAccelerator("activate", accel_group, gdk.GDK_s,
+	save_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_s,
 		int(gdk.GDK_CONTROL_MASK), gtk.GTK_ACCEL_VISIBLE)
 
 	save_as_item := gtk.MenuItemWithMnemonic("Save _as")
@@ -162,7 +162,7 @@ func init_tabby() {
 	close_item := gtk.MenuItemWithMnemonic("_Close")
 	file_submenu.Append(close_item)
 	close_item.Connect("activate", close_cb, nil)
-	close_item.AddAccelerator("activate", accel_group, gdk.GDK_w,
+	close_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_w,
 		int(gdk.GDK_CONTROL_MASK), gtk.GTK_ACCEL_VISIBLE)
 
 	exit_item := gtk.MenuItemWithMnemonic("E_xit")
@@ -177,55 +177,55 @@ func init_tabby() {
 	prev_instance_item := gtk.MenuItemWithMnemonic("_Previous Instance")
 	navigation_submenu.Append(prev_instance_item)
 	prev_instance_item.Connect("activate", prev_instance_cb, nil)
-	prev_instance_item.AddAccelerator("activate", accel_group, gdk.GDK_F2,
+	prev_instance_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_F2,
 		0, gtk.GTK_ACCEL_VISIBLE)
 
 	next_instance_item := gtk.MenuItemWithMnemonic("_Next Instance")
 	navigation_submenu.Append(next_instance_item)
 	next_instance_item.Connect("activate", next_instance_cb, nil)
-	next_instance_item.AddAccelerator("activate", accel_group, gdk.GDK_F3,
+	next_instance_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_F3,
 		0, gtk.GTK_ACCEL_VISIBLE)
 
 	prev_result_item := gtk.MenuItemWithMnemonic("Prev search result")
 	navigation_submenu.Append(prev_result_item)
 	prev_result_item.Connect("activate", func() {search_view.PrevResult()}, nil)
-	prev_result_item.AddAccelerator("activate", accel_group, gdk.GDK_F4,
+	prev_result_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_F4,
 		0, gtk.GTK_ACCEL_VISIBLE)
 
 	next_result_item := gtk.MenuItemWithMnemonic("Next search result")
 	navigation_submenu.Append(next_result_item)
 	next_result_item.Connect("activate", func() {search_view.NextResult()}, nil)
-	next_result_item.AddAccelerator("activate", accel_group, gdk.GDK_F5,
+	next_result_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_F5,
 		0, gtk.GTK_ACCEL_VISIBLE)
 
 	find_item := gtk.MenuItemWithMnemonic("_Find")
 	navigation_submenu.Append(find_item)
 	find_item.Connect("activate", find_cb, nil)
-	find_item.AddAccelerator("activate", accel_group, gdk.GDK_f,
+	find_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_f,
 		int(gdk.GDK_CONTROL_MASK), gtk.GTK_ACCEL_VISIBLE)
 
 	find_file_item := gtk.MenuItemWithMnemonic("_Find file")
 	navigation_submenu.Append(find_file_item)
 	find_file_item.Connect("activate", find_file_cb, nil)
-	find_file_item.AddAccelerator("activate", accel_group, gdk.GDK_d,
+	find_file_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_d,
 		int(gdk.GDK_CONTROL_MASK), gtk.GTK_ACCEL_VISIBLE)
 
 	fnr_item := gtk.MenuItemWithMnemonic("Find and Replace")
 	navigation_submenu.Append(fnr_item)
 	fnr_item.Connect("activate", fnr_cb, nil)
-	fnr_item.AddAccelerator("activate", accel_group, gdk.GDK_r,
+	fnr_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_r,
 		int(gdk.GDK_CONTROL_MASK), gtk.GTK_ACCEL_VISIBLE)
 
 	prev_file_item := gtk.MenuItemWithMnemonic("Prev File")
 	navigation_submenu.Append(prev_file_item)
 	prev_file_item.Connect("activate", prev_file_cb, nil)
-	prev_file_item.AddAccelerator("activate", accel_group, gdk.GDK_F7,
+	prev_file_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_F7,
 		0, gtk.GTK_ACCEL_VISIBLE)
 
 	next_file_item := gtk.MenuItemWithMnemonic("Next File")
 	navigation_submenu.Append(next_file_item)
 	next_file_item.Connect("activate", next_file_cb, nil)
-	next_file_item.AddAccelerator("activate", accel_group, gdk.GDK_F8,
+	next_file_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_F8,
 		0, gtk.GTK_ACCEL_VISIBLE)
 
 	tools_item := gtk.MenuItemWithMnemonic("_Tools")
@@ -236,13 +236,13 @@ func init_tabby() {
 	gofmt_item := gtk.MenuItemWithMnemonic("_Gofmt")
 	tools_submenu.Append(gofmt_item)
 	gofmt_item.Connect("activate", gofmt_cb, nil)
-	gofmt_item.AddAccelerator("activate", accel_group, gdk.GDK_F9,
+	gofmt_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_F9,
 		0, gtk.GTK_ACCEL_VISIBLE)
 
 	gofmtAll_item := gtk.MenuItemWithMnemonic("Gofmt _All")
 	tools_submenu.Append(gofmtAll_item)
 	gofmtAll_item.Connect("activate", gofmt_all, nil)
-	gofmtAll_item.AddAccelerator("activate", accel_group, gdk.GDK_F9,
+	gofmtAll_item.AddAccelerator("activate", accel_group, gdk.GDK_KEY_F9,
 		int(gdk.GDK_CONTROL_MASK), gtk.GTK_ACCEL_VISIBLE)
 
 	options_item := gtk.MenuItemWithMnemonic("_Options")

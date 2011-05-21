@@ -85,7 +85,7 @@ func find_dialog(find_file bool) (bool, string, bool, bool) {
 	dialog.AddButton("_Cancel", int(gtk.GTK_RESPONSE_CANCEL))
 	w := dialog.GetWidgetForResponse(int(gtk.GTK_RESPONSE_ACCEPT))
 	dialog.AddAccelGroup(accel_group)
-	w.AddAccelerator("clicked", accel_group, gdk.GDK_Return,
+	w.AddAccelerator("clicked", accel_group, gdk.GDK_KEY_Return,
 		0, gtk.GTK_ACCEL_VISIBLE)
 	entry := find_entry_with_history()
 	global_button := gtk.CheckButtonWithLabel("Global")

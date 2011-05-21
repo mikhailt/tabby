@@ -58,7 +58,7 @@ func fnr_dialog() {
 		}
 	},
 		nil)
-	find_next_button.AddAccelerator("clicked", accel_group, gdk.GDK_Return,
+	find_next_button.AddAccelerator("clicked", accel_group, gdk.GDK_KEY_Return,
 		0, gtk.GTK_ACCEL_VISIBLE)
 
 	replace_button.Connect("clicked", func() {
