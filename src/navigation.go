@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gtk"
+	"github.com/mattn/go-gtk/gtk"
 	"runtime"
 )
 

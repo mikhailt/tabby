@@ -85,7 +85,7 @@ static void* create_tabby_search_tree() {
 }
 */
 import "C"
-import "gtk"
+import "github.com/mattn/go-gtk/gtk"
 
 func NewFileTree() *gtk.GtkTreeView {
 	return &gtk.GtkTreeView{gtk.GtkContainer{gtk.GtkWidget{

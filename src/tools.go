@@ -4,7 +4,7 @@ import (
   "os"
 	"io"
 	"bytes"
-	"gtk"
+	"github.com/mattn/go-gtk/gtk"
 )
 
 func gofmt_all() {
