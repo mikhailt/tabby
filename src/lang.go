@@ -52,6 +52,7 @@ func init_lang() {
 	lang_map["py"] = lang_man.GetLanguage("python")
 	lang_map["scons"] = lang_man.GetLanguage("python")
 	lang_map["SConstruct"] = lang_man.GetLanguage("python")
+	lang_map["java"] = lang_man.GetLanguage("java")
 	
 	lang_map["default"] = lang_man.GetLanguage("sh")
 	
