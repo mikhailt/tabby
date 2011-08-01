@@ -1,10 +1,12 @@
 package main
 
 import (
-  "os"
+	"os"
+	"exec"
 	"io"
 	"bytes"
-	"gtk"
+	"path/filepath"
+	"github.com/mattn/go-gtk/gtk"
 )
 
 func gofmt_all() {
@@ -22,7 +24,13 @@ func gofmt(file string) {
 	} else {
 		buf = rec.buf
 	}
-	std, error, e := get_output([]string{os.Getenv("GOBIN") + "/gofmt"}, buf)
+	bin := os.Getenv("GOBIN")
+	if bin != "" {
+		bin = filepath.Join(bin, "gofmt")
+	} else {
+		bin, _ = exec.LookPath("gofmt")
+	}
+	std, error, e := get_output([]string{bin}, buf)
 	if e != nil {
 		tabby_log(e.String())
 		return
@@ -64,9 +72,9 @@ func get_output(args []string, input []byte) (std []byte, error []byte, e os.Err
 		return nil, nil, err
 	}
 	pid, err := os.StartProcess(args[0], args, &os.ProcAttr{
-	  Dir:	".",
-	  Env:	os.Environ(),
-	  Files: []*os.File{inpr, stdw, errw},
+		Dir:   ".",
+		Env:   os.Environ(),
+		Files: []*os.File{inpr, stdw, errw},
 	})
 
 	if err != nil {

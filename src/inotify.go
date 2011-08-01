@@ -3,8 +3,8 @@ package main
 import (
 	"syscall"
 	"unsafe"
-	"gdk"
-	"gtk"
+	"github.com/mattn/go-gtk/gdk"
+	"github.com/mattn/go-gtk/gtk"
 	"strconv"
 )
 
