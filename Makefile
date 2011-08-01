@@ -1,3 +1,5 @@
+include $(GOROOT)/src/Make.inc
+
 ifeq ($(GOARCH), amd64)
 	C = 6g
 	L = 6l

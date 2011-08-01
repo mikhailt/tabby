@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gdk"
+	"github.com/mattn/go-gtk/gdk"
 	"strings"
 	"os"
 	"flag"

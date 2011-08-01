@@ -1,8 +1,8 @@
 package main
 
 import (
-	"gtk"
-	"glib"
+	"github.com/mattn/go-gtk/gtk"
+	"github.com/mattn/go-gtk/glib"
 	"strings"
 )
 

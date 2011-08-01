@@ -1,8 +1,8 @@
 package main
 
 import (
-	"gtk"
-	"gdk"
+	"github.com/mattn/go-gtk/gtk"
+	"github.com/mattn/go-gtk/gdk"
 	"strings"
 	"strconv"
 )
