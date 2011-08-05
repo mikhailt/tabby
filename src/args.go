@@ -168,7 +168,7 @@ func prefixed_path(file string) string {
 }
 
 func open_file_from_args(file string, focus_line int) bool {
-	split_file := strings.Split(file, ":", 2)
+	split_file := strings.SplitN(file, ":", 2)
 	if len(split_file) >= 2 {
 		focus_line, _ = strconv.Atoi(split_file[1])
 	}
