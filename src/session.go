@@ -106,7 +106,7 @@ func session_restore() {
 	defer file.Close()
 	var str string
 	for next_string_from_reader(reader, &str) {
-		split_str := strings.Split(str, ":", 3)
+		split_str := strings.SplitN(str, ":", 3)
 		if session_open_and_read_file(split_str[0]) {
 			be, _ := strconv.Atoi(split_str[1])
 			en, _ := strconv.Atoi(split_str[2])

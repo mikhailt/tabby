@@ -37,7 +37,7 @@ func load_options() {
 	defer file.Close()
 	var str string
 	for next_string_from_reader(reader, &str) {
-		args := strings.Split(compact_space(str), "\t", -1)
+		args := strings.Split(compact_space(str), "\t")
 		switch args[0] {
 		case "space_not_tab":
 			opt.space_not_tab, _ = strconv.Atob(args[1])
