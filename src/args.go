@@ -7,6 +7,7 @@ import (
 	"flag"
 	"net"
 	"strconv"
+	"runtime"
 )
 
 var listener net.Listener
@@ -84,6 +85,10 @@ func provide_tabby_server(cnt int) bool {
 		return true
 	}
 	if *pstandalone {
+		return true
+	}
+
+	if runtime.GOOS == "windows" {
 		return true
 	}
 	user := os.Getenv("USER")

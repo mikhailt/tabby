@@ -13,7 +13,7 @@ type IgnoreMap map[string]*regexp.Regexp
 var ignore IgnoreMap
 
 func file_is_saved(file string) bool {
-	return '/' == file[0]
+	return strings.Index(file, string(os.PathSeparator)) != -1
 }
 
 func name_is_ignored(name string) bool {
