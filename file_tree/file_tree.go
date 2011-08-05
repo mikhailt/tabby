@@ -88,11 +88,11 @@ import "C"
 import "github.com/mattn/go-gtk/gtk"
 
 func NewFileTree() *gtk.GtkTreeView {
-	return &gtk.GtkTreeView{gtk.GtkContainer{gtk.GtkWidget{
-		gtk.FromNative(C.create_tabby_file_tree())}}}
+	return &gtk.GtkTreeView{gtk.GtkContainer{
+		*gtk.WidgetFromNative(C.create_tabby_file_tree())}}
 }
 
 func NewSearchTree() *gtk.GtkTreeView {
-	return &gtk.GtkTreeView{gtk.GtkContainer{gtk.GtkWidget{
-		gtk.FromNative(C.create_tabby_search_tree())}}}
+	return &gtk.GtkTreeView{gtk.GtkContainer{
+		*gtk.WidgetFromNative(C.create_tabby_search_tree())}}
 }

@@ -74,7 +74,6 @@ func bump_question(m string) (b bool) {
 
 func init_tabby() {
 	init_navigation()
-	gdk.ThreadsInit()
 	init_inotify()
 
 	search_view.Init()
@@ -367,6 +366,8 @@ func main() {
 	}
 	load_options()
 	defer save_options()
+	gdk.ThreadsInit()
+	gdk.ThreadsEnter()
 	gtk.Init(nil)
 	init_tabby()
 	gtk.Main()

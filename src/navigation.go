@@ -55,7 +55,9 @@ func file_save_current() {
 	rec.sel_be = be.GetOffset()
 	rec.sel_en = en.GetOffset()
 	file_stack_push(cur_file)
-	runtime.GC()
+	if found {
+		runtime.GC()
+	}
 }
 
 // Switches to another file. In most cases you want to call file_save_current 
