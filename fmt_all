@@ -1,7 +1,0 @@
-for file in `dir -d ./src/* ./file_tree/*` ; do
-  if [[ "$file" == "./file_tree/Makefile" ]]; then
-    continue
-  fi
-  gofmt "$file" > "$file".gofmt
-  mv "$file".gofmt "$file" 
-done

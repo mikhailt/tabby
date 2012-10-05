@@ -84,6 +84,7 @@ static void* create_tabby_search_tree() {
   return view;
 }
 */
+// #cgo pkg-config: gtk+-2.0
 import "C"
 import "github.com/mattn/go-gtk/gtk"
 
