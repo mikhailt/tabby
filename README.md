@@ -4,25 +4,21 @@ tabby
   Source code editor written in Go using go-gtk bindings. It aims to handle 
   navigation effectively among large number of files.
 
-SCREENSHOT:
+screenshot:
 -----------
 ![tabby!](https://github.com/mikhailt/tabby/raw/gh-pages/tabby.png "tabby!")
 
-DEPENDENCIES:
+dependencies:
 --------
-  go\
-  go-gtk\
-  libgtk2.0-dev\
+  go 
+  go-gtk 
+  libgtk2.0-dev 
   libgtksourceview2.0-dev
 
-BUILD:
+build & run::
 --------
-  Compile & run:
-    make
-    ./tabby 
-    
-  Put style sheets to corresponding places:
-    make fix_style
-    
-  Install:
-    make install
+  
+  0. Install Go & set GOPATH
+  1. Put tabby git repo into your $GOPATH/src/ directory
+  2. type "go install tabby"
+  3. call $GOPATH/bin/tabby
