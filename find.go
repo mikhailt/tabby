@@ -60,8 +60,6 @@ func find_common(find_file bool) {
 	}
 }
 
-
-
 // Returns true if pattern was found in current file, false o/w.
 func find_in_current_file(pattern string, global bool) bool {
 	var be, en gtk.GtkTextIter

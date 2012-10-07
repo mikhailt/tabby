@@ -7,6 +7,7 @@ import (
 	"github.com/mattn/go-gtk/gtksourceview"
 	"tabby/file_tree"
 	"strconv"
+	"fmt"
 )
 
 var main_window *gtk.GtkWindow
@@ -39,11 +40,9 @@ func refresh_title() {
 		main_window.SetTitle(cur_file)
 		icon = 'B'
 	}
-	if tree_store.IterIsValid(&cur_iter) {
-		var val glib.GValue
-		tree_model.GetValue(&cur_iter, 0, &val)
-		tree_store.Set(&cur_iter, string(icon)+val.GetString()[1:])
-	}
+	var val glib.GValue
+	tree_model.GetValue(&cur_iter, 0, &val)
+	tree_store.Set(&cur_iter, string(icon)+val.GetString()[1:])
 }
 
 func buf_changed_cb() {
@@ -82,7 +81,7 @@ func init_tabby() {
 	source_buf = gtksourceview.SourceBuffer()
 	source_buf.Connect("paste-done", paste_done_cb, nil)
 	source_buf.Connect("mark-set", mark_set_cb, nil)
-	source_buf.Connect("changed", buf_changed_cb, nil)
+	source_buf.Connect("modified-changed", buf_changed_cb, nil)
 
 	init_lang()
 
@@ -340,7 +339,7 @@ func init_tabby() {
 }
 
 func tabby_log(m string) {
-	println("tabby: " + m)
+	fmt.Println("tabby: " + m)
 }
 
 func init_vars() {
@@ -354,12 +353,13 @@ func init_vars() {
 }
 
 func main() {
+	gdk.ThreadsInit()
 	if false == init_args() {
 		return
 	}
 	load_options()
 	defer save_options()
-	gdk.ThreadsInit()
+	
 	gdk.ThreadsEnter()
 	gtk.Init(nil)
 	init_tabby()

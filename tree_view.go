@@ -47,32 +47,34 @@ func tree_view_get_selected_path(tree_view *gtk.GtkTreeView, tree_model *gtk.Gtk
 }
 
 // Sets cur_iter pointing to tree_store node corresponding to current file.
-// Requires properly set cur_file.
+// Requires properly set cur_file. As a side effect it also assigns correct 
+// capitalization for first letters of strings kept in nodes according to @mark
+// which denotes if current file is active or not.
 func tree_view_set_cur_iter(mark bool) {
 	if "" == cur_file {
 		return
 	}
 	var parent gtk.GtkTreeIter
-	name := cur_file
+	cur_file_suffix := cur_file
 	tree_model.GetIterFirst(&cur_iter)
 	for {
-		var val glib.GValue
-		tree_model.GetValue(&cur_iter, 0, &val)
-		whole_string := val.GetString()
-		cur_str := whole_string[1:]
-		pos := slashed_prefix(name, cur_str)
-		if pos > 0 {
+		var gval glib.GValue
+		tree_model.GetValue(&cur_iter, 0, &gval)
+		gval_string := gval.GetString()
+		icon := gval_string[0]
+		node_path := gval_string[1:]
+		if pos := slashed_prefix(cur_file_suffix, node_path); pos > 0 {
 			if mark {
-				tree_store.Set(&cur_iter, strings.ToUpper(whole_string[:1])+cur_str)
+				tree_store.Set(&cur_iter, strings.ToUpper(string(icon)) + node_path)
 			} else {
-				tree_store.Set(&cur_iter, strings.ToLower(whole_string[:1])+cur_str)
+				tree_store.Set(&cur_iter, strings.ToLower(string(icon)) + node_path)
 			}
-			if pos == len(name) {
+			if pos == len(cur_file_suffix) {
 				break
 			}
 			parent.Assign(&cur_iter)
 			tree_model.IterChildren(&cur_iter, &parent)
-			name = name[pos:]
+			cur_file_suffix = cur_file_suffix[pos:]
 		} else {
 			tree_model.IterNext(&cur_iter)
 		}

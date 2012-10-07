@@ -22,11 +22,10 @@ void tabby_renderer(GtkTreeViewColumn *col,
     g_object_set(renderer, "foreground", "Blue", "foreground-set", TRUE,
                  "background", "#DBEDFF", "background-set", TRUE, NULL);
   } else {
-    if (c < 'a') {
-      g_object_set(renderer, "background", "#B3FFC2", "background-set", 
-                   TRUE, NULL);
+    if (('C' == c) || ('B' == c)) {
+      g_object_set(renderer, "background", "#B3FFC2", "background-set", TRUE, NULL);
     } else {
-      g_object_set(renderer, "background", "White", "background-set", TRUE, NULL);
+      g_object_set(renderer, "background", "#FFFAFA", "background-set", TRUE, NULL);
     }
     if (('c' == c) || ('C' == c)) {
       g_object_set(renderer, "foreground", "Red", "foreground-set", TRUE, NULL);  

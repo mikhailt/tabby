@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/mattn/go-gtk/gtk"
+	//	"github.com/mattn/go-gtk/gdk"
 	"runtime"
 )
 
@@ -85,12 +86,12 @@ func file_switch_to(name string) {
 		sel_be_to_set = 0
 		sel_en_to_set = 0
 	}
+	cur_file = name_to_set
+	tree_view_set_cur_iter(true)
 	source_buf.BeginNotUndoableAction()
 	source_buf.SetText(text_to_set)
 	source_buf.SetModified(modified_to_set)
 	source_buf.EndNotUndoableAction()
-	cur_file = name_to_set
-	tree_view_set_cur_iter(true)
 	refresh_title()
 	source_view.GrabFocus()
 	var be_iter, en_iter gtk.GtkTextIter
@@ -227,9 +228,9 @@ func tree_view_scroll_to_cur_iter() {
 	if "" == cur_file {
 		return
 	}
-	if false == tree_store.IterIsValid(&cur_iter) {
-		return
-	}
+	//if false == tree_store.IterIsValid(&cur_iter) {
+	//	return
+	//}
 	path := tree_model.GetPath(&cur_iter)
 	tree_view.ScrollToCell(path, nil, true, 0.5, 0)
 }
