@@ -15,7 +15,7 @@ dependencies:
   libgtk2.0-dev 
   libgtksourceview2.0-dev
 
-build & run::
+build & run:
 --------
   
   0. Install Go & set GOPATH

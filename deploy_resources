@@ -1,0 +1,6 @@
+PREFIX=/usr
+sudo cp resource/go.lang ${PREFIX}/share/gtksourceview-2.0/language-specs/
+sudo chmod 644 ${PREFIX}/share/gtksourceview-2.0/language-specs/go.lang
+sudo cp resource/classic.xml ${PREFIX}/share/gtksourceview-2.0/styles/
+sudo chmod 644 ${PREFIX}/share/gtksourceview-2.0/styles/classic.xml
+cp resource/.tabbyignore ~
