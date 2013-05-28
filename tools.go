@@ -45,7 +45,7 @@ func gofmt(file string) {
 	}
 	if file == cur_file {
 		if string(buf) != string(std) {
-			var be, en gtk.GtkTextIter
+			var be, en gtk.TextIter
 			source_buf.GetSelectionBounds(&be, &en)
 			sel_be := be.GetOffset()
 			source_buf.SetText(string(std))

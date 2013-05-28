@@ -124,8 +124,8 @@ func file_tree_insert_rec(root *FileTreeNode, name string, rec *FileRecord) {
 
 // Dumps root subtree to tree_store at iter. Flag is false for dumping files and
 // true for directories.
-func file_tree_store_rec(root *FileTreeNode, iter *gtk.GtkTreeIter, flag bool) {
-	var child_iter gtk.GtkTreeIter
+func file_tree_store_rec(root *FileTreeNode, iter *gtk.TreeIter, flag bool) {
+	var child_iter gtk.TreeIter
 	var icon byte
 	for cur_child := root.child; nil != cur_child; cur_child = cur_child.brother {
 		is_dir := name_is_dir(cur_child.name)

@@ -18,20 +18,20 @@ func tree_view_select_cb() {
 	file_switch_to(sel_file)
 }
 
-func tree_view_get_selected_path(tree_view *gtk.GtkTreeView, tree_model *gtk.GtkTreeModel, col int, shift bool) string {
-	var path *gtk.GtkTreePath
-	var column *gtk.GtkTreeViewColumn
+func tree_view_get_selected_path(tree_view *gtk.TreeView, tree_model *gtk.TreeModel, col int, shift bool) string {
+	var path *gtk.TreePath
+	var column *gtk.TreeViewColumn
 	tree_view.GetCursor(&path, &column)
-	if nil == path.TreePath {
+	if nil == path.GTreePath {
 		return ""
 	}
-	var iter gtk.GtkTreeIter
+	var iter gtk.TreeIter
 	tree_model.GetIterFromString(&iter, path.String())
 	var ans string
 	ans = ""
 	for {
 		var val glib.GValue
-		var next gtk.GtkTreeIter
+		var next gtk.TreeIter
 		tree_model.GetValue(&iter, col, &val)
 		if shift {
 			ans = val.GetString()[1:] + ans
@@ -54,7 +54,7 @@ func tree_view_set_cur_iter(mark bool) {
 	if "" == cur_file {
 		return
 	}
-	var parent gtk.GtkTreeIter
+	var parent gtk.TreeIter
 	cur_file_suffix := cur_file
 	tree_model.GetIterFirst(&cur_iter)
 	for {
