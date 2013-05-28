@@ -87,12 +87,12 @@ static void* create_tabby_search_tree() {
 import "C"
 import "github.com/mattn/go-gtk/gtk"
 
-func NewFileTree() *gtk.GtkTreeView {
-	return &gtk.GtkTreeView{gtk.GtkContainer{
+func NewFileTree() *gtk.TreeView {
+	return &gtk.TreeView{gtk.Container{
 		*gtk.WidgetFromNative(C.create_tabby_file_tree())}}
 }
 
-func NewSearchTree() *gtk.GtkTreeView {
-	return &gtk.GtkTreeView{gtk.GtkContainer{
+func NewSearchTree() *gtk.TreeView {
+	return &gtk.TreeView{gtk.Container{
 		*gtk.WidgetFromNative(C.create_tabby_search_tree())}}
 }

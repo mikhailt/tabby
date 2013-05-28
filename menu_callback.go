@@ -83,7 +83,7 @@ func save_as_cb() {
 	if false == dialog_ok {
 		return
 	}
-	var be, en gtk.GtkTextIter
+	var be, en gtk.TextIter
 	source_buf.GetStartIter(&be)
 	source_buf.GetEndIter(&en)
 	text_to_save := source_buf.GetText(&be, &en, true)
@@ -133,7 +133,7 @@ func close_cb() {
 }
 
 func paste_done_cb() {
-	var be, en gtk.GtkTextIter
+	var be, en gtk.TextIter
 	source_buf.GetStartIter(&be)
 	source_buf.GetEndIter(&en)
 	source_buf.RemoveTagByName("instance", &be, &en)
@@ -202,28 +202,28 @@ const (
 )
 
 func file_chooser_dialog(t int) (bool, string) {
-	var action gtk.GtkFileChooserAction
+	var action gtk.FileChooserAction
 	var ok_stock string
 	if OPEN_DIALOG == t {
-		action = gtk.GTK_FILE_CHOOSER_ACTION_OPEN
-		ok_stock = gtk.GTK_STOCK_OPEN
+		action = gtk.FILE_CHOOSER_ACTION_OPEN
+		ok_stock = gtk.STOCK_OPEN
 	} else if SAVE_DIALOG == t {
-		action = gtk.GTK_FILE_CHOOSER_ACTION_SAVE
-		ok_stock = gtk.GTK_STOCK_SAVE
+		action = gtk.FILE_CHOOSER_ACTION_SAVE
+		ok_stock = gtk.STOCK_SAVE
 	} else if OPEN_DIR_DIALOG == t {
-		action = gtk.GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER
-		ok_stock = gtk.GTK_STOCK_OPEN
+		action = gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER
+		ok_stock = gtk.STOCK_OPEN
 	}
-	dialog := gtk.FileChooserDialog("", source_view.GetTopLevelAsWindow(),
+	dialog := gtk.NewFileChooserDialog("", source_view.GetTopLevelAsWindow(),
 		action,
-		gtk.GTK_STOCK_CANCEL, int(gtk.GTK_RESPONSE_CANCEL),
-		ok_stock, int(gtk.GTK_RESPONSE_ACCEPT))
+		gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+		ok_stock, gtk.RESPONSE_ACCEPT)
 	dialog.SetCurrentFolder(prev_dir)
 	res := dialog.Run()
 	dialog_folder := dialog.GetCurrentFolder()
 	dialog_file := dialog.GetFilename()
 	dialog.Destroy()
-	if int(gtk.GTK_RESPONSE_ACCEPT) == res {
+	if gtk.RESPONSE_ACCEPT == res {
 		prev_dir = dialog_folder
 		return true, dialog_file
 	}
@@ -250,9 +250,9 @@ func gofmt_cb() {
 }
 
 func font_cb() {
-	dialog := gtk.FontSelectionDialog("Pick a font")
+	dialog := gtk.NewFontSelectionDialog("Pick a font")
 	dialog.SetFontName(opt.font)
-	if int(gtk.GTK_RESPONSE_OK) == dialog.Run() {
+	if gtk.RESPONSE_OK == dialog.Run() {
 		opt.font = dialog.GetFontName()
 		source_view.ModifyFontEasy(opt.font)
 	}

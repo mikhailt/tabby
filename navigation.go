@@ -21,10 +21,10 @@ var file_stack_max = 0
 var prev_global bool = true
 var prev_pattern string = ""
 
-var accel_group *gtk.GtkAccelGroup = nil
+var accel_group *gtk.AccelGroup = nil
 
-func find_entry_with_history() *gtk.GtkComboBoxEntry {
-	entry := gtk.ComboBoxEntryNewText()
+func find_entry_with_history() *gtk.ComboBoxEntry {
+	entry := gtk.NewComboBoxEntryNewText()
 	entry.SetVisible(true)
 	selection := source_selection()
 	if ("" != selection) && (len(selection) <= MAX_SEL_LEN) {
@@ -38,14 +38,14 @@ func find_entry_with_history() *gtk.GtkComboBoxEntry {
 }
 
 func get_source() string {
-	var be, en gtk.GtkTextIter
+	var be, en gtk.TextIter
 	source_buf.GetStartIter(&be)
 	source_buf.GetEndIter(&en)
 	return source_buf.GetText(&be, &en, true)
 }
 
 func file_save_current() {
-	var be, en gtk.GtkTextIter
+	var be, en gtk.TextIter
 	rec, found := file_map[cur_file]
 	if false == found {
 		rec = new(FileRecord)
@@ -94,7 +94,7 @@ func file_switch_to(name string) {
 	source_buf.EndNotUndoableAction()
 	refresh_title()
 	source_view.GrabFocus()
-	var be_iter, en_iter gtk.GtkTextIter
+	var be_iter, en_iter gtk.TextIter
 	source_buf.GetIterAtOffset(&be_iter, sel_be_to_set)
 	source_buf.GetIterAtOffset(&en_iter, sel_en_to_set)
 	move_focus_and_selection(&be_iter, &en_iter)
@@ -147,8 +147,8 @@ func stack_prev(a *int) {
 }
 
 func mark_set_cb() {
-	var cur gtk.GtkTextIter
-	var be, en gtk.GtkTextIter
+	var cur gtk.TextIter
+	var be, en gtk.TextIter
 
 	source_buf.GetSelectionBounds(&be, &en)
 	selection := source_buf.GetSlice(&be, &en, false)
@@ -177,7 +177,7 @@ func mark_set_cb() {
 	}
 }
 
-func find_next_instance(start, be, en *gtk.GtkTextIter, pattern string) bool {
+func find_next_instance(start, be, en *gtk.TextIter, pattern string) bool {
 	if start.ForwardSearch(pattern, 0, be, en, nil) {
 		return true
 	}
@@ -186,7 +186,7 @@ func find_next_instance(start, be, en *gtk.GtkTextIter, pattern string) bool {
 }
 
 func next_instance_cb() {
-	var be, en gtk.GtkTextIter
+	var be, en gtk.TextIter
 	source_buf.GetSelectionBounds(&be, &en)
 	selection := source_buf.GetSlice(&be, &en, false)
 	if "" == selection {
@@ -197,7 +197,7 @@ func next_instance_cb() {
 	move_focus_and_selection(&be, &en)
 }
 
-func find_prev_instance(start, be, en *gtk.GtkTextIter, pattern string) bool {
+func find_prev_instance(start, be, en *gtk.TextIter, pattern string) bool {
 	if start.BackwardSearch(pattern, 0, be, en, nil) {
 		return true
 	}
@@ -206,7 +206,7 @@ func find_prev_instance(start, be, en *gtk.GtkTextIter, pattern string) bool {
 }
 
 func prev_instance_cb() {
-	var be, en gtk.GtkTextIter
+	var be, en gtk.TextIter
 	source_buf.GetSelectionBounds(&be, &en)
 	selection := source_buf.GetSlice(&be, &en, false)
 	if "" == selection {
@@ -217,7 +217,7 @@ func prev_instance_cb() {
 	move_focus_and_selection(&be, &en)
 }
 
-func move_focus_and_selection(be *gtk.GtkTextIter, en *gtk.GtkTextIter) {
+func move_focus_and_selection(be *gtk.TextIter, en *gtk.TextIter) {
 	source_buf.MoveMarkByName("insert", be)
 	source_buf.MoveMarkByName("selection_bound", en)
 	mark := source_buf.GetMark("insert")
@@ -236,7 +236,7 @@ func tree_view_scroll_to_cur_iter() {
 }
 
 func source_selection() string {
-	var be, en gtk.GtkTextIter
+	var be, en gtk.TextIter
 	source_buf.GetSelectionBounds(&be, &en)
 	return source_buf.GetSlice(&be, &en, false)
 }
@@ -278,5 +278,5 @@ func file_stack_at_top() string {
 }
 
 func init_navigation() {
-	accel_group = gtk.AccelGroup()
+	accel_group = gtk.NewAccelGroup()
 }

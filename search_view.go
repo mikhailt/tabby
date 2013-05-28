@@ -2,30 +2,30 @@ package main
 
 import (
 	"github.com/mattn/go-gtk/gtk"
-	"tabby/file_tree"
+	"github.com/mikhailt/tabby/file_tree"
 	"strconv"
 )
 
 type SearchView struct {
 	cursor, size int
-	view *gtk.GtkTreeView
-	store *gtk.GtkTreeStore
-	model *gtk.GtkTreeModel
-	window *gtk.GtkScrolledWindow
+	view *gtk.TreeView
+	store *gtk.TreeStore
+	model *gtk.TreeModel
+	window *gtk.ScrolledWindow
 }
 
 func (v *SearchView) Init() {
-	v.store = gtk.TreeStore(gtk.GTK_TYPE_STRING)
+	v.store = gtk.NewTreeStore(gtk.TYPE_STRING)
 	v.view = file_tree.NewSearchTree()
 	v.view.ModifyFontEasy("Regular 8")
 	v.model = v.store.ToTreeModel()
 	v.view.SetModel(v.model)
-	v.view.AppendColumn(gtk.TreeViewColumnWithAttributes("", 
-		gtk.CellRendererText(), "text", 0))
+	v.view.AppendColumn(gtk.NewTreeViewColumnWithAttributes("", 
+		gtk.NewCellRendererText(), "text", 0))
 	v.view.SetHeadersVisible(false)
 	v.view.Connect("cursor-changed", func() {v.Select()}, nil)
-	v.window = gtk.ScrolledWindow(nil, nil)
-	v.window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
+	v.window = gtk.NewScrolledWindow(nil, nil)
+	v.window.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 	v.window.Add(v.view)
 	v.window.SetVisible(opt.show_search)
 }
@@ -45,12 +45,12 @@ func (v *SearchView) Select() {
 
 func (v *SearchView) SetCursor(pos int) {
 	v.cursor = pos
-	ppath := gtk.TreePathFromString(strconv.Itoa(pos))
+	ppath := gtk.NewTreePathFromString(strconv.Itoa(pos))
 	v.view.SetCursor(ppath, nil, false)
 }
 
 func (v *SearchView) AddFile(file string) {
-	var iter gtk.GtkTreeIter
+	var iter gtk.TreeIter
 	v.store.Append(&iter, nil)
 	v.store.Set(&iter, file)
 	v.size++

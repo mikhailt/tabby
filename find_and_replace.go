@@ -13,7 +13,7 @@ func fnr_cb() {
 
 func fnr_dialog() {
 	var fnr_cnt int = 0
-	var scope_be, scope_en gtk.GtkTextIter
+	var scope_be, scope_en gtk.TextIter
 	if MAX_SEL_LEN < len(source_selection()) {
 		source_buf.GetSelectionBounds(&scope_be, &scope_en)
 	} else {
@@ -26,18 +26,18 @@ func fnr_dialog() {
 	var global_map map[string]int
 	var insert_set bool = false
 
-	dialog := gtk.Dialog()
+	dialog := gtk.NewDialog()
 	dialog.SetTitle("Find and Replace")
-	dialog.AddButton("_Find Next", int(gtk.GTK_RESPONSE_OK))
-	dialog.AddButton("_Replace", int(gtk.GTK_RESPONSE_YES))
-	dialog.AddButton("Replace _All", int(gtk.GTK_RESPONSE_APPLY))
-	dialog.AddButton("_Close", int(gtk.GTK_RESPONSE_CLOSE))
+	dialog.AddButton("_Find Next", gtk.RESPONSE_OK)
+	dialog.AddButton("_Replace", gtk.RESPONSE_YES)
+	dialog.AddButton("Replace _All", gtk.RESPONSE_APPLY)
+	dialog.AddButton("_Close", gtk.RESPONSE_CLOSE)
 	dialog.AddAccelGroup(accel_group)
 
 	entry := find_entry_with_history()
 	replacement := find_entry_with_history()
 
-	global_button := gtk.CheckButtonWithLabel("Global")
+	global_button := gtk.NewCheckButtonWithLabel("Global")
 	global_button.SetVisible(true)
 	global_button.SetActive(prev_global)
 
@@ -46,10 +46,10 @@ func fnr_dialog() {
 	vbox.Add(replacement)
 	vbox.Add(global_button)
 
-	find_next_button := dialog.GetWidgetForResponse(int(gtk.GTK_RESPONSE_OK))
-	replace_button := dialog.GetWidgetForResponse(int(gtk.GTK_RESPONSE_YES))
-	replace_all_button := dialog.GetWidgetForResponse(int(gtk.GTK_RESPONSE_APPLY))
-	close_button := dialog.GetWidgetForResponse(int(gtk.GTK_RESPONSE_CLOSE))
+	find_next_button := dialog.GetWidgetForResponse(int(gtk.RESPONSE_OK))
+	replace_button := dialog.GetWidgetForResponse(int(gtk.RESPONSE_YES))
+	replace_all_button := dialog.GetWidgetForResponse(int(gtk.RESPONSE_APPLY))
+	close_button := dialog.GetWidgetForResponse(int(gtk.RESPONSE_CLOSE))
 
 	find_next_button.Connect("clicked", func() {
 		fnr_pre_cb(global_button, &insert_set)
@@ -58,8 +58,8 @@ func fnr_dialog() {
 		}
 	},
 		nil)
-	find_next_button.AddAccelerator("clicked", accel_group, gdk.GDK_KEY_Return,
-		0, gtk.GTK_ACCEL_VISIBLE)
+	find_next_button.AddAccelerator("clicked", accel_group, gdk.KEY_Return,
+		0, gtk.ACCEL_VISIBLE)
 
 	replace_button.Connect("clicked", func() {
 		fnr_pre_cb(global_button, &insert_set)
@@ -147,13 +147,13 @@ func fnr_replace_all_global(entry, replacement string) int {
 	return total_cnt
 }
 
-func fnr_pre_cb(global_button *gtk.GtkCheckButton, insert_set *bool) {
+func fnr_pre_cb(global_button *gtk.CheckButton, insert_set *bool) {
 	prev_global = global_button.GetActive()
 	fnr_refresh_scope(prev_global)
 	fnr_set_insert(insert_set)
 }
 
-func fnr_close_and_report(dialog *gtk.GtkDialog, fnr_cnt int) {
+func fnr_close_and_report(dialog *gtk.Dialog, fnr_cnt int) {
 	dialog.Destroy()
 	bump_message(strconv.Itoa(fnr_cnt) + " replacements were done.")
 }
@@ -161,7 +161,7 @@ func fnr_close_and_report(dialog *gtk.GtkDialog, fnr_cnt int) {
 func fnr_set_insert(insert_set *bool) {
 	if false == *insert_set {
 		*insert_set = true
-		var scope_be gtk.GtkTextIter
+		var scope_be gtk.TextIter
 		get_iter_at_mark_by_name("fnr_be", &scope_be)
 		source_buf.MoveMarkByName("insert", &scope_be)
 		source_buf.MoveMarkByName("selection_bound", &scope_be)
@@ -169,7 +169,7 @@ func fnr_set_insert(insert_set *bool) {
 }
 
 func fnr_refresh_scope(global bool) {
-	var be, en gtk.GtkTextIter
+	var be, en gtk.TextIter
 	if global {
 		source_buf.GetStartIter(&be)
 		source_buf.GetEndIter(&en)
@@ -179,7 +179,7 @@ func fnr_refresh_scope(global bool) {
 }
 
 func fnr_find_next(pattern string, global bool, map_filled *bool, m *map[string]int) bool {
-	var be, en, scope_en gtk.GtkTextIter
+	var be, en, scope_en gtk.TextIter
 	get_iter_at_mark_by_name("fnr_en", &scope_en)
 	get_iter_at_mark_by_name("selection_bound", &en)
 	if en.ForwardSearch(pattern, 0, &be, &en, &scope_en) {
@@ -240,7 +240,7 @@ func fnr_replace(entry string, replacement string, global bool, map_filled *bool
 	}
 	source_buf.DeleteSelection(false, true)
 	source_buf.InsertAtCursor(replacement)
-	var be, en gtk.GtkTextIter
+	var be, en gtk.TextIter
 	source_buf.GetSelectionBounds(&be, &en)
 	source_buf.MoveMarkByName("insert", &en)
 	return 1, fnr_find_next(entry, global, map_filled, global_map)
@@ -257,7 +257,7 @@ func pop_string_from_map(m *map[string]int) string {
 	return ""
 }
 
-func get_iter_at_mark_by_name(mark_name string, iter *gtk.GtkTextIter) {
+func get_iter_at_mark_by_name(mark_name string, iter *gtk.TextIter) {
 	mark := source_buf.GetMark(mark_name)
 	source_buf.GetIterAtMark(iter, mark)
 }

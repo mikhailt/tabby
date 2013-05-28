@@ -135,39 +135,39 @@ func inotify_observe_collect(buf []byte) map[string]int {
 // Returns true in case of reloading files, and false in case of keeping as is.
 func inotify_dialog(s map[string]int) bool {
 	if nil == accel_group {
-		accel_group = gtk.AccelGroup()
+		accel_group = gtk.NewAccelGroup()
 	}
-	inotify_dlg := gtk.Dialog()
+	inotify_dlg := gtk.NewDialog()
 	defer inotify_dlg.Destroy()
 	inotify_dlg.SetTitle("Some files have beed modified outside of tabby")
-	inotify_dlg.AddButton("_Reload all", int(gtk.GTK_RESPONSE_ACCEPT))
-	inotify_dlg.AddButton("_Keep all as is", int(gtk.GTK_RESPONSE_CANCEL))
-	w := inotify_dlg.GetWidgetForResponse( int(gtk.GTK_RESPONSE_ACCEPT))
+	inotify_dlg.AddButton("_Reload all", gtk.RESPONSE_ACCEPT)
+	inotify_dlg.AddButton("_Keep all as is", gtk.RESPONSE_CANCEL)
+	w := inotify_dlg.GetWidgetForResponse(int(gtk.RESPONSE_ACCEPT))
 	inotify_dlg.AddAccelGroup(accel_group)
-	w.AddAccelerator("clicked", accel_group, gdk.GDK_KEY_Return,
-		0, gtk.GTK_ACCEL_VISIBLE)
+	w.AddAccelerator("clicked", accel_group, gdk.KEY_Return,
+		0, gtk.ACCEL_VISIBLE)
 	inotify_dlg.SetSizeRequest(800, 350)
-	inotify_store := gtk.TreeStore(gtk.GTK_TYPE_STRING)
-	inotify_view := gtk.TreeView()
+	inotify_store := gtk.NewTreeStore(gtk.TYPE_STRING)
+	inotify_view := gtk.NewTreeView()
 	inotify_view.AppendColumn(
-		gtk.TreeViewColumnWithAttributes("text", gtk.CellRendererText(), "text", 0))
+		gtk.NewTreeViewColumnWithAttributes("text", gtk.NewCellRendererText(), "text", 0))
 	inotify_view.ModifyFontEasy("Regular 8")
 	inotify_model := inotify_store.ToTreeModel()
 	inotify_view.SetModel(inotify_model)
 	inotify_view.SetHeadersVisible(false)
-	var iter gtk.GtkTreeIter
+	var iter gtk.TreeIter
 	for name, _ := range s {
 		inotify_store.Append(&iter, nil)
 		inotify_store.Set(&iter, name)
 	}
 	inotify_view.SetVisible(true)
-	view_window := gtk.ScrolledWindow(nil, nil)
-	view_window.SetPolicy(gtk.GTK_POLICY_AUTOMATIC, gtk.GTK_POLICY_AUTOMATIC)
+	view_window := gtk.NewScrolledWindow(nil, nil)
+	view_window.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 	view_window.SetVisible(true)
 	view_window.Add(inotify_view)
 	vbox := inotify_dlg.GetVBox()
 	vbox.Add(view_window)
-	if int(gtk.GTK_RESPONSE_ACCEPT) == inotify_dlg.Run() {
+	if gtk.RESPONSE_ACCEPT == inotify_dlg.Run() {
 		return true
 	}
 	return false
