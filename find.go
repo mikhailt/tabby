@@ -62,7 +62,7 @@ func find_common(find_file bool) {
 
 // Returns true if pattern was found in current file, false o/w.
 func find_in_current_file(pattern string, global bool) bool {
-	var be, en gtk.GtkTextIter
+	var be, en gtk.TextIter
 	source_buf.GetSelectionBounds(&be, &en)
 	if find_next_instance(&en, &be, &en, pattern) {
 		move_focus_and_selection(&be, &en)
@@ -76,27 +76,27 @@ func find_in_current_file(pattern string, global bool) bool {
 }
 
 func find_dialog(find_file bool) (bool, string, bool, bool) {
-	dialog := gtk.Dialog()
+	dialog := gtk.NewDialog()
 	defer dialog.Destroy()
 	dialog.SetTitle("Find")
-	dialog.AddButton("_Find", int(gtk.GTK_RESPONSE_ACCEPT))
-	dialog.AddButton("_Cancel", int(gtk.GTK_RESPONSE_CANCEL))
-	w := dialog.GetWidgetForResponse(int(gtk.GTK_RESPONSE_ACCEPT))
+	dialog.AddButton("_Find", gtk.RESPONSE_ACCEPT)
+	dialog.AddButton("_Cancel", gtk.RESPONSE_CANCEL)
+	w := dialog.GetWidgetForResponse(int(gtk.RESPONSE_ACCEPT))
 	dialog.AddAccelGroup(accel_group)
-	w.AddAccelerator("clicked", accel_group, gdk.GDK_KEY_Return,
-		0, gtk.GTK_ACCEL_VISIBLE)
+	w.AddAccelerator("clicked", accel_group, gdk.KEY_Return,
+		0, gtk.ACCEL_VISIBLE)
 	entry := find_entry_with_history()
-	global_button := gtk.CheckButtonWithLabel("Global")
+	global_button := gtk.NewCheckButtonWithLabel("Global")
 	global_button.SetVisible(true)
 	global_button.SetActive(prev_global)
-	file_button := gtk.CheckButtonWithLabel("Find file by name pattern")
+	file_button := gtk.NewCheckButtonWithLabel("Find file by name pattern")
 	file_button.SetVisible(true)
 	file_button.SetActive(find_file)
 	vbox := dialog.GetVBox()
 	vbox.Add(entry)
 	vbox.Add(global_button)
 	vbox.Add(file_button)
-	if int(gtk.GTK_RESPONSE_ACCEPT) == dialog.Run() {
+	if gtk.RESPONSE_ACCEPT == dialog.Run() {
 		entry_text := entry.GetActiveText()
 		if nil == search_history {
 			search_history = make([]string, 1)

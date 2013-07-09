@@ -4,7 +4,7 @@ import (
 	"github.com/mattn/go-gtk/gtksourceview"
 )
 
-var lang_map map[string]*gtksourceview.GtkSourceLanguage
+var lang_map map[string]*gtksourceview.SourceLanguage
 
 var prev_lang string = "default"
 
@@ -33,7 +33,7 @@ func lang_get_extension(name string) string {
 
 func init_lang() {
 	lang_man := gtksourceview.SourceLanguageManagerGetDefault()
-	lang_map = make(map[string]*gtksourceview.GtkSourceLanguage)
+	lang_map = make(map[string]*gtksourceview.SourceLanguage)
 	lang_map["go"] = lang_man.GetLanguage("go")
 	lang_map["c"] = lang_man.GetLanguage("c")
 	lang_map["h"] = lang_man.GetLanguage("cpp")
