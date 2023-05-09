@@ -1,3 +1,4 @@
+// Package main is the main package of the program.
 package main
 
 import (
@@ -23,6 +24,7 @@ var prev_pattern string = ""
 
 var accel_group *gtk.AccelGroup = nil
 
+// find_entry_with_history returns a combo box entry widget containing search history.
 func find_entry_with_history() *gtk.ComboBoxEntry {
 	entry := gtk.NewComboBoxEntryNewText()
 	entry.SetVisible(true)
@@ -37,6 +39,7 @@ func find_entry_with_history() *gtk.ComboBoxEntry {
 	return entry
 }
 
+// get_source returns the source code as a string.
 func get_source() string {
 	var be, en gtk.TextIter
 	source_buf.GetStartIter(&be)
@@ -44,6 +47,7 @@ func get_source() string {
 	return source_buf.GetText(&be, &en, true)
 }
 
+// file_save_current saves the current file.
 func file_save_current() {
 	var be, en gtk.TextIter
 	rec, found := file_map[cur_file]
@@ -61,8 +65,9 @@ func file_save_current() {
 	}
 }
 
-// Switches to another file. In most cases you want to call file_save_current 
-// before this method. Otherwise current changes will be lost.
+// file_switch_to switches to another file.
+// In most cases you want to call file_save_current before this method.
+// Otherwise current changes will be lost.
 func file_switch_to(name string) {
 	if "" == name {
 		return
@@ -104,6 +109,7 @@ func file_switch_to(name string) {
 	lang_refresh()
 }
 
+// file_stack_push pushes a file name to the file stack.
 func file_stack_push(name string) {
 	if name == file_stack_at_top() {
 		return
@@ -118,6 +124,7 @@ func file_stack_push(name string) {
 	}
 }
 
+// file_stack_pop pops a file name from the file stack.
 func file_stack_pop() string {
 	for {
 		if file_stack_base == file_stack_top {
@@ -132,6 +139,7 @@ func file_stack_pop() string {
 	return ""
 }
 
+// stack_next increments the given index for the file stack.
 func stack_next(a *int) {
 	*a++
 	if STACK_SIZE == *a {
@@ -139,6 +147,7 @@ func stack_next(a *int) {
 	}
 }
 
+// stack_prev decrements the given index for the file stack.
 func stack_prev(a *int) {
 	*a--
 	if -1 == *a {
@@ -146,6 +155,7 @@ func stack_prev(a *int) {
 	}
 }
 
+// mark_set_cb is the callback for setting a mark.
 func mark_set_cb() {
 	var cur gtk.TextIter
 	var be, en gtk.TextIter
@@ -177,6 +187,7 @@ func mark_set_cb() {
 	}
 }
 
+// find_next_instance finds the next instance of a pattern in the source buffer.
 func find_next_instance(start, be, en *gtk.TextIter, pattern string) bool {
 	if start.ForwardSearch(pattern, 0, be, en, nil) {
 		return true
@@ -185,6 +196,7 @@ func find_next_instance(start, be, en *gtk.TextIter, pattern string) bool {
 	return be.ForwardSearch(pattern, 0, be, en, nil)
 }
 
+// next_instance_cb is the callback for finding the next instance of a pattern.
 func next_instance_cb() {
 	var be, en gtk.TextIter
 	source_buf.GetSelectionBounds(&be, &en)
@@ -197,6 +209,7 @@ func next_instance_cb() {
 	move_focus_and_selection(&be, &en)
 }
 
+// find_prev_instance finds the previous instance of a pattern in the source buffer.
 func find_prev_instance(start, be, en *gtk.TextIter, pattern string) bool {
 	if start.BackwardSearch(pattern, 0, be, en, nil) {
 		return true
@@ -205,6 +218,7 @@ func find_prev_instance(start, be, en *gtk.TextIter, pattern string) bool {
 	return be.BackwardSearch(pattern, 0, be, en, nil)
 }
 
+// prev_instance_cb is the callback for finding the previous instance of a pattern.
 func prev_instance_cb() {
 	var be, en gtk.TextIter
 	source_buf.GetSelectionBounds(&be, &en)
@@ -217,6 +231,7 @@ func prev_instance_cb() {
 	move_focus_and_selection(&be, &en)
 }
 
+// move_focus_and_selection moves the focus and sets the selection to the given start and end positions.
 func move_focus_and_selection(be *gtk.TextIter, en *gtk.TextIter) {
 	source_buf.MoveMarkByName("insert", be)
 	source_buf.MoveMarkByName("selection_bound", en)
@@ -224,6 +239,7 @@ func move_focus_and_selection(be *gtk.TextIter, en *gtk.TextIter) {
 	source_view.ScrollToMark(mark, 0, true, 1, 0.5)
 }
 
+// tree_view_scroll_to_cur_iter scrolls to the current cursor position.
 func tree_view_scroll_to_cur_iter() {
 	if "" == cur_file {
 		return
@@ -235,12 +251,14 @@ func tree_view_scroll_to_cur_iter() {
 	tree_view.ScrollToCell(path, nil, true, 0.5, 0)
 }
 
+// source_selection returns the current selection in the source buffer as a string.
 func source_selection() string {
 	var be, en gtk.TextIter
 	source_buf.GetSelectionBounds(&be, &en)
 	return source_buf.GetSlice(&be, &en, false)
 }
 
+// next_file_cb switches to the next file in the file stack.
 func next_file_cb() {
 	if file_stack_top == file_stack_max {
 		return
@@ -259,6 +277,7 @@ func next_file_cb() {
 	}
 }
 
+// prev_file_cb switches to the previous file in the file stack.
 func prev_file_cb() {
 	shift_flag := file_stack_top == file_stack_max
 	file_save_current()
@@ -271,12 +290,14 @@ func prev_file_cb() {
 	file_switch_to(file_stack_pop())
 }
 
+// file_stack_at_top returns the file name at the top of the file stack.
 func file_stack_at_top() string {
 	t := file_stack_top
 	stack_prev(&t)
 	return file_stack[t]
 }
 
+// init_navigation initializes the navigation features.
 func init_navigation() {
 	accel_group = gtk.NewAccelGroup()
 }
