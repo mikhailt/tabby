@@ -1,9 +1,12 @@
+// Package declaration
 package main
 
+// Importing go-gtk/gtk library
 import (
 	"github.com/mattn/go-gtk/gtk"
 )
 
+// FileTreeNode structure definition
 type FileTreeNode struct {
 	name    string
 	parent  *FileTreeNode
@@ -12,6 +15,7 @@ type FileTreeNode struct {
 	rec     *FileRecord
 }
 
+// Creates a new FileTreeNode with given FileRecord
 func NewFileTreeNode(rec *FileRecord) *FileTreeNode {
 	res := new(FileTreeNode)
 	res.parent = nil
@@ -21,38 +25,15 @@ func NewFileTreeNode(rec *FileRecord) *FileTreeNode {
 	return res
 }
 
+// The root node of the file tree
 var file_tree_root FileTreeNode
 
+// Checks if a given name is a directory
 func name_is_dir(name string) bool {
 	return ('/' == name[len(name)-1])
 }
 
-func slashed_prefix(a string, b string) int {
-	la := len(a)
-	lb := len(b)
-	var bar int
-	if la < lb {
-		bar = la
-	} else {
-		bar = lb
-	}
-	last_slash := 0
-	for y := 0; y < bar; y++ {
-		if a[y] != b[y] {
-			return last_slash
-		}
-		if '/' == a[y] {
-			last_slash = y + 1
-		}
-	}
-	if la == lb {
-		return bar
-	}
-	return last_slash
-}
-
-// In case pos == 0 node means last smaller than this node;
-// pos > 0 means that found node with common slashed prefix with name.
+// Finds a file node among the children of a given root node
 func file_tree_find_among_children(root *FileTreeNode, name string) (node *FileTreeNode, position int, prev *FileTreeNode) {
 	var pos int
 	var cur_child, prev_child *FileTreeNode
@@ -75,10 +56,12 @@ func file_tree_find_among_children(root *FileTreeNode, name string) (node *FileT
 	return last_smaller_node, 0, prev_child
 }
 
+// Inserts a new file into the file tree
 func file_tree_insert(name string, rec *FileRecord) {
 	file_tree_insert_rec(&file_tree_root, name, rec)
 }
 
+// Recursively inserts a new file into the file tree
 func file_tree_insert_rec(root *FileTreeNode, name string, rec *FileRecord) {
 	cur_child, pos, prev_child := file_tree_find_among_children(root, name)
 	if nil == cur_child {
@@ -122,8 +105,16 @@ func file_tree_insert_rec(root *FileTreeNode, name string, rec *FileRecord) {
 	file_tree_insert_rec(replacement, name[pos:], rec)
 }
 
-// Dumps root subtree to tree_store at iter. Flag is false for dumping files and
-// true for directories.
+// Dumps the file tree root subtree to tree_store
+func file_tree_store() {
+	tree_store.Clear()
+	file_tree_store_rec(&file_tree_root, nil, false)
+	file_tree_store_rec(&file_tree_root, nil, true)
+	tree_view.ExpandAll()
+	tree_view_set_cur_iter(true)
+}
+
+// Recursively dumps the given root subtree to tree_store
 func file_tree_store_rec(root *FileTreeNode, iter *gtk.TreeIter, flag bool) {
 	var child_iter gtk.TreeIter
 	var icon byte
@@ -148,14 +139,7 @@ func file_tree_store_rec(root *FileTreeNode, iter *gtk.TreeIter, flag bool) {
 	}
 }
 
-func file_tree_store() {
-	tree_store.Clear()
-	file_tree_store_rec(&file_tree_root, nil, false)
-	file_tree_store_rec(&file_tree_root, nil, true)
-	tree_view.ExpandAll()
-	tree_view_set_cur_iter(true)
-}
-
+// Removes a file with given name from the file tree
 func file_tree_remove(root *FileTreeNode, name string, merge_flag bool) {
 	cur_child, pos, prev_child := file_tree_find_among_children(root, name)
 	name_len := len(name)
@@ -192,6 +176,7 @@ func file_tree_remove(root *FileTreeNode, name string, merge_flag bool) {
 	bump_message("file_tree_remove: unexpected case: name = " + name)
 }
 
+// Removes the given node from the file tree
 func file_tree_remove_node(cur *FileTreeNode, prev *FileTreeNode) {
 	if nil != prev {
 		prev.brother = cur.brother
@@ -200,6 +185,7 @@ func file_tree_remove_node(cur *FileTreeNode, prev *FileTreeNode) {
 	}
 }
 
+// Merges parent and child nodes in the file tree
 func file_tree_merge_parent_and_child(child *FileTreeNode) {
 	parent := child.parent
 	if &file_tree_root == parent {
