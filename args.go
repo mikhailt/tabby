@@ -1,3 +1,4 @@
+// This package is the main entry point of the Tabby editor.
 package main
 
 import (
@@ -15,12 +16,14 @@ var tabby_args []string
 var pfocus_line *int
 var pstandalone *bool
 
+// open_files_from_args will open all the files from tabby_args.
 func open_files_from_args() {
 	for _, s := range tabby_args {
 		open_file_from_args(prefixed_path(s), *pfocus_line)
 	}
 }
 
+// tabby_server is the server function of Tabby editor.
 func tabby_server() {
 	var focus_line int
 	buf := make([]byte, 1024)
@@ -78,8 +81,7 @@ func tabby_server() {
 	}
 }
 
-// Returns true if start of real tabby instance required and false o/w.
-// In case of false sends arguments to tabby server.
+// provide_tabby_server determines whether a new instance of Tabby editor should be spawned.
 func provide_tabby_server(cnt int) bool {
 	if cnt > 3 {
 		return true
@@ -118,7 +120,7 @@ func provide_tabby_server(cnt int) bool {
 	return true
 }
 
-// Returns true/false whether new instance of tabby editor have to be spawned.
+// init_args initializes the command-line arguments passed to Tabby editor.
 func init_args() bool {
 	pfocus_line = flag.Int("f", 1, "Focus line")
 	pstandalone = flag.Bool("s", false, "Forces to open new instance of tabby.")
@@ -128,6 +130,7 @@ func init_args() bool {
 	return provide_tabby_server(0)
 }
 
+// pack_tabby_args returns the arguments passed to Tabby editor in a packed format.
 func pack_tabby_args() string {
 	res := strconv.Itoa(*pfocus_line) + "\n"
 	for _, s := range tabby_args {
@@ -137,6 +140,7 @@ func pack_tabby_args() string {
 	return res
 }
 
+// simplified_path returns the simplified version of a file path.
 func simplified_path(file string) string {
 	res := file
 	for {
@@ -159,6 +163,7 @@ func simplified_path(file string) string {
 	return res
 }
 
+// prefixed_path returns the file path with a prefix.
 func prefixed_path(file string) string {
 	if '/' != file[0] {
 		// Relative file name.
@@ -172,6 +177,7 @@ func prefixed_path(file string) string {
 	return file
 }
 
+// open_file_from_args opens a file passed as an argument to Tabby editor.
 func open_file_from_args(file string, focus_line int) bool {
 	split_file := strings.SplitN(file, ":", 2)
 	if len(split_file) >= 2 {
