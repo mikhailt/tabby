@@ -1,3 +1,4 @@
+// Package main contains the main function and related methods of the Tabby editor.
 package main
 
 import (
@@ -6,6 +7,7 @@ import (
 	"strconv"
 )
 
+// Options struct is used to manage the various options of the editor
 type Options struct {
 	show_error, show_search, space_not_tab          bool
 	ohp_position, ihp_position, vvp_position        int
@@ -14,6 +16,7 @@ type Options struct {
 	tabsize                                         int
 }
 
+// new_options function initializes the default options for the editor.
 func new_options() (o Options) {
 	o.show_search = true
 	o.show_error = true
@@ -27,11 +30,13 @@ func new_options() (o Options) {
 	return
 }
 
+// atoi function converts a string to an integer value.
 func atoi(s string) (i int) {
 	i, _ = strconv.Atoi(s)
 	return
 }
 
+// load_options function reads the options from the configuration file and updates the Options struct.
 func load_options() {
 	reader, file := take_reader_from_file(os.Getenv("HOME") + "/.tabbyoptions")
 	defer file.Close()
@@ -62,6 +67,7 @@ func load_options() {
 	}
 }
 
+// save_options function saves the options to the configuration file.
 func save_options() {
 	file, _ := os.OpenFile(os.Getenv("HOME")+"/.tabbyoptions", os.O_CREATE|os.O_WRONLY, 0644)
 	if nil == file {
@@ -83,6 +89,7 @@ func save_options() {
 	file.Close()
 }
 
+// compact_space function removes extra spaces from a string.
 func compact_space(s string) string {
 	s = strings.TrimSpace(s)
 	n := replace_space(s)
@@ -93,14 +100,17 @@ func compact_space(s string) string {
 	return s
 }
 
+// replace_space function replaces extra spaces with tabs in a string.
 func replace_space(s string) string {
 	return strings.Replace(strings.Replace(strings.Replace(s, "  ", " ", -1),
 		"\t ", "\t", -1),
 		" \t", "\t", -1)
 }
 
+// opt variable contains the default options for the editor.
 var opt Options = new_options()
 
+// window_event_cb function updates the options when the main window is resized or moved.
 func window_event_cb() {
 	main_window.GetSize(&opt.window_width, &opt.window_height)
 	main_window.GetPosition(&opt.window_x, &opt.window_y)
@@ -109,18 +119,22 @@ func window_event_cb() {
 	options_set_tabsize(opt.tabsize)
 }
 
+// ohp_cb function updates the position of horizontal scrollbar.
 func ohp_cb(pos int) {
 	opt.ohp_position = pos
 }
 
+// ihp_cb function updates the position of horizontal scrollbar.
 func ihp_cb(pos int) {
 	opt.ihp_position = pos
 }
 
+// vvp_cb function updates the position of vertical scrollbar.
 func vvp_cb(pos int) {
 	opt.vvp_position = pos
 }
 
+// options_set_tabsize function sets the tab size for the editor.
 func options_set_tabsize(s int) {
 	opt.tabsize = s
 	source_view.SetIndentWidth(s)
