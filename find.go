@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// find_global searches for a given pattern either in all files (if find_file is true) or in the current file (if find_file is false).
 func find_global(pattern string, find_file bool) {
 	var pos int
 	if find_file {
@@ -30,14 +31,17 @@ func find_global(pattern string, find_file bool) {
 	}
 }
 
+// find_cb is the callback function for the "Find" button.
 func find_cb() {
 	find_common(false)
 }
 
+// find_file_cb is the callback function for the "Find file" button.
 func find_file_cb() {
 	find_common(true)
 }
 
+// find_common is the common functionality for "Find" and "Find file" buttons.
 func find_common(find_file bool) {
 	found_in_cur_file := false
 	dialog_ok, pattern, global, find_file := find_dialog(find_file)
@@ -60,7 +64,8 @@ func find_common(find_file bool) {
 	}
 }
 
-// Returns true if pattern was found in current file, false o/w.
+// find_in_current_file searches for a given pattern in the current file.
+// It returns true if pattern was found in current file, false o/w.
 func find_in_current_file(pattern string, global bool) bool {
 	var be, en gtk.TextIter
 	source_buf.GetSelectionBounds(&be, &en)
@@ -75,6 +80,7 @@ func find_in_current_file(pattern string, global bool) bool {
 	return false
 }
 
+// find_dialog displays the "Find" dialog and returns the input values.
 func find_dialog(find_file bool) (bool, string, bool, bool) {
 	dialog := gtk.NewDialog()
 	defer dialog.Destroy()
