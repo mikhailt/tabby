@@ -1,11 +1,14 @@
+// Define package main
 package main
 
+// Import necessary packages
 import (
 	"os"
 	"strings"
 	"strconv"
 )
 
+// Define a struct for options
 type Options struct {
 	show_error, show_search, space_not_tab          bool
 	ohp_position, ihp_position, vvp_position        int
@@ -14,6 +17,7 @@ type Options struct {
 	tabsize                                         int
 }
 
+// Create and return a new options object with default values
 func new_options() (o Options) {
 	o.show_search = true
 	o.show_error = true
@@ -27,15 +31,19 @@ func new_options() (o Options) {
 	return
 }
 
+// Convert a string to an integer
 func atoi(s string) (i int) {
 	i, _ = strconv.Atoi(s)
 	return
 }
 
+// Load options from a file
 func load_options() {
+	// Get a reader and file pointer from OS
 	reader, file := take_reader_from_file(os.Getenv("HOME") + "/.tabbyoptions")
 	defer file.Close()
 	var str string
+	// Read and process each string from the reader
 	for next_string_from_reader(reader, &str) {
 		args := strings.Split(compact_space(str), "\t")
 		switch args[0] {
@@ -62,13 +70,17 @@ func load_options() {
 	}
 }
 
+// Save options to a file
 func save_options() {
+	// Open or create a new file for writing
 	file, _ := os.OpenFile(os.Getenv("HOME")+"/.tabbyoptions", os.O_CREATE|os.O_WRONLY, 0644)
 	if nil == file {
 		tabby_log("unable to save options")
 		return
 	}
+	// Clear the file contents
 	file.Truncate(0)
+	// Write new option values to the file
 	file.WriteString("show_search\t" + strconv.FormatBool(opt.show_search) + "\n")
 	file.WriteString("show_error\t" + strconv.FormatBool(opt.show_error) + "\n")
 	file.WriteString("space_not_tab\t" + strconv.FormatBool(opt.space_not_tab) + "\n")
@@ -80,9 +92,11 @@ func save_options() {
 		strconv.Itoa(opt.window_y) + "\n")
 	file.WriteString("font\t" + opt.font + "\n")
 	file.WriteString("tabsize\t" + strconv.Itoa(opt.tabsize) + "\n")
+	// Close the file
 	file.Close()
 }
 
+// Replace multiple spaces in a string with a single space
 func compact_space(s string) string {
 	s = strings.TrimSpace(s)
 	n := replace_space(s)
@@ -93,14 +107,17 @@ func compact_space(s string) string {
 	return s
 }
 
+// Replace specific space patterns with a single space
 func replace_space(s string) string {
 	return strings.Replace(strings.Replace(strings.Replace(s, "  ", " ", -1),
 		"\t ", "\t", -1),
 		" \t", "\t", -1)
 }
 
+// Create and initialize a new options object
 var opt Options = new_options()
 
+// Handle a window event
 func window_event_cb() {
 	main_window.GetSize(&opt.window_width, &opt.window_height)
 	main_window.GetPosition(&opt.window_x, &opt.window_y)
@@ -109,18 +126,22 @@ func window_event_cb() {
 	options_set_tabsize(opt.tabsize)
 }
 
+// Handle an OHP position event
 func ohp_cb(pos int) {
 	opt.ohp_position = pos
 }
 
+// Handle an IHP position event
 func ihp_cb(pos int) {
 	opt.ihp_position = pos
 }
 
+// Handle a VVP position event
 func vvp_cb(pos int) {
 	opt.vvp_position = pos
 }
 
+// Set the tab size based on the given size
 func options_set_tabsize(s int) {
 	opt.tabsize = s
 	source_view.SetIndentWidth(s)
