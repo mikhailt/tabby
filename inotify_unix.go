@@ -1,8 +1,11 @@
+// This program uses inotify to observe file changes and update a tabbed text editor accordingly.
+
 package main
 
 import (
 	"syscall"
 	"unsafe"
+
 	"github.com/mattn/go-gtk/gdk"
 	"github.com/mattn/go-gtk/gtk"
 )
@@ -17,29 +20,42 @@ var epoll_fd int
 
 const NEVENTS int = 1024
 
+// Initialize inotify and epoll.
 func init_inotify() {
 	var err error
 
+	// Create maps to store watch descriptors and filenames.
 	name_by_wd = make(map[int32]string)
 	wd_by_name = make(map[string]int32)
+
+	// Get the size of an inotify event.
 	var event syscall.InotifyEvent
 	event_size = int(unsafe.Sizeof(event))
+
+	// Initialize inotify.
 	inotify_fd, _ = syscall.InotifyInit()
 	if -1 == inotify_fd {
-		bump_message("InotifyInit failed, file changes outside of tabby " +
+		bump_message("InotifyInit failed, file changes outside of tabby "+
 			"will remain unnoticed")
 		return
 	}
+
+	// Create an epoll instance.
 	epoll_fd, err = syscall.EpollCreate(1)
 	if -1 == epoll_fd {
 		tabby_log("init_inotify: " + err.Error())
 	}
+
+	// Add inotify descriptor to epoll instance.
 	var epoll_event syscall.EpollEvent
 	epoll_event.Events = syscall.EPOLLIN
 	syscall.EpollCtl(epoll_fd, syscall.EPOLL_CTL_ADD, inotify_fd, &epoll_event)
+
+	// Start observing for changes.
 	go inotify_observe()
 }
 
+// Add a file to the list of observed files.
 func inotify_add_watch(name string) {
 	wd, err := syscall.InotifyAddWatch(inotify_fd, name,
 		syscall.IN_MODIFY|syscall.IN_DELETE_SELF|syscall.IN_MOVE_SELF)
@@ -48,14 +64,15 @@ func inotify_add_watch(name string) {
 			// Dirty hack.
 			return
 		}
-		tabby_log("InotifyAddWatch failed, changes of file " + name +
-			" outside of tabby will remain unnoticed, errno = " + err.Error())
+		tabby_log("InotifyAddWatch failed, changes of file "+name+
+			" outside of tabby will remain unnoticed, errno = "+err.Error())
 		return
 	}
 	name_by_wd[int32(wd)] = name
 	wd_by_name[name] = int32(wd)
 }
 
+// Remove a file from the list of observed files.
 func inotify_rm_watch(name string) {
 	wd, found := wd_by_name[name]
 	if false == found {
@@ -70,6 +87,7 @@ func inotify_rm_watch(name string) {
 	delete(wd_by_name, name)
 }
 
+// Observe for file changes and reload modified files.
 func inotify_observe() {
 	buf := make([]byte, event_size*NEVENTS)
 	for {
@@ -109,6 +127,7 @@ func inotify_observe() {
 	}
 }
 
+// Collect modified files.
 func inotify_observe_collect(buf []byte) map[string]int {
 	epoll_buf := make([]syscall.EpollEvent, 1)
 	collect := make(map[string]int)
@@ -132,6 +151,7 @@ func inotify_observe_collect(buf []byte) map[string]int {
 	return collect
 }
 
+// Show a dialog asking to reload modified files or keep as is.
 // Returns true in case of reloading files, and false in case of keeping as is.
 func inotify_dialog(s map[string]int) bool {
 	if nil == accel_group {
