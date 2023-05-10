@@ -10,6 +10,7 @@ import (
 var prev_dir string
 var last_unsaved int = -1
 
+// Creates a new file with an unsaved status.
 func new_cb() {
 	file_save_current()
 	last_unsaved++
@@ -21,6 +22,7 @@ func new_cb() {
 	tree_view_set_cur_iter(true)
 }
 
+// Opens a file with a dialog box.
 func open_cb() {
 	file_save_current()
 	dialog_ok, dialog_file := file_chooser_dialog(OPEN_DIALOG)
@@ -37,6 +39,7 @@ func open_cb() {
 	}
 }
 
+// Opens a directory with a dialog box and reads all the files in it.
 func open_rec_cb() {
 	dialog_ok, dialog_dir := file_chooser_dialog(OPEN_DIR_DIALOG)
 	if false == dialog_ok {
@@ -51,6 +54,7 @@ func open_rec_cb() {
 	file_tree_store()
 }
 
+// Saves the current file.
 func save_cb() {
 	if !file_is_saved(cur_file) {
 		save_as_cb()
@@ -78,6 +82,7 @@ func save_cb() {
 	refresh_title()
 }
 
+// Saves the current file with a dialog box to choose the name and location of the file.
 func save_as_cb() {
 	dialog_ok, dialog_file := file_chooser_dialog(SAVE_DIALOG)
 	if false == dialog_ok {
@@ -97,6 +102,7 @@ func save_as_cb() {
 	tree_view_set_cur_iter(true)
 }
 
+// Exits the program with a prompt to save unsaved files.
 func exit_cb() {
 	// Are-you-sure-you-want-to-exit-because-file-is-unsaved logic will be here.
 	session_save()
@@ -106,6 +112,7 @@ func exit_cb() {
 	gtk.MainQuit()
 }
 
+// Closes the current file with a prompt to save.
 func close_cb() {
 	if "" == cur_file {
 		return
@@ -132,6 +139,7 @@ func close_cb() {
 	}
 }
 
+// Ends the operation of pasting with a specified tag.
 func paste_done_cb() {
 	var be, en gtk.TextIter
 	source_buf.GetStartIter(&be)
@@ -170,31 +178,7 @@ func open_file_read_to_buf(name string, verbose bool) (bool, []byte) {
 	return true, buf
 }
 
-func open_dir(dir *os.File, dir_name string, recursively bool) {
-	names, _ := dir.Readdirnames(-1)
-	for _, name := range names {
-		abs_name := dir_name + "/" + name
-		if name_is_ignored(abs_name) {
-			continue
-		}
-		fi, _ := os.Lstat(abs_name)
-		if nil == fi {
-			continue
-		}
-		if fi.IsDir() {
-			if recursively {
-				child_dir, _ := os.OpenFile(abs_name, os.O_RDONLY, 0)
-				if nil != child_dir {
-					open_dir(child_dir, abs_name, true)
-				}
-				child_dir.Close()
-			}
-		} else {
-			session_open_and_read_file(abs_name)
-		}
-	}
-}
-
+// Creates a dialog box to choose a file or directory to open or save.
 const (
 	OPEN_DIALOG     = 0
 	SAVE_DIALOG     = 1
@@ -230,25 +214,30 @@ func file_chooser_dialog(t int) (bool, string) {
 	return false, ""
 }
 
+// Shows or hides the error window.
 func error_chk_cb(current bool) {
 	error_window.SetVisible(current)
 	opt.show_error = current
 }
 
+// Shows or hides the search window.
 func search_chk_cb(current bool) {
 	search_view.window.SetVisible(current)
 	opt.show_search = current
 }
 
+// Sets the option to use spaces instead of tabs.
 func notab_chk_cb(current bool) {
 	opt.space_not_tab = current
 	source_view.SetInsertSpacesInsteadOfTabs(opt.space_not_tab)
 }
 
+// Formats the current file with gofmt.
 func gofmt_cb() {
 	gofmt(cur_file)
 }
 
+// Creates a dialog box to choose the font of the editor.
 func font_cb() {
 	dialog := gtk.NewFontSelectionDialog("Pick a font")
 	dialog.SetFontName(opt.font)
