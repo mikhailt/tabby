@@ -1,21 +1,25 @@
+// Package main is the entry point of the program
 package main
 
 import (
-	"os"
 	"bufio"
+	"os"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 )
 
+// IgnoreMap is a map containing regular expressions used for ignoring files
 type IgnoreMap map[string]*regexp.Regexp
 
 var ignore IgnoreMap
 
+// file_is_saved checks if the given file is already saved
 func file_is_saved(file string) bool {
 	return strings.Index(file, string(os.PathSeparator)) != -1
 }
 
+// name_is_ignored checks if the given name is to be ignored based on IgnoreMap
 func name_is_ignored(name string) bool {
 	for _, re := range ignore {
 		if nil == re {
@@ -28,6 +32,7 @@ func name_is_ignored(name string) bool {
 	return false
 }
 
+// get_stack_set_add_file adds the given file to the stack
 func get_stack_set_add_file(file string, m map[string]int, l []string, s *int) {
 	if !file_is_saved(file) {
 		return
@@ -40,9 +45,7 @@ func get_stack_set_add_file(file string, m map[string]int, l []string, s *int) {
 	}
 }
 
-// Returns set of files contained in stack + cur_file. Deletes all the files 
-// from stack as a side effect. Also returns reverse list of files from stack
-// without duplications preceeded by cur_file.
+// get_stack_set returns the set of files contained in stack + cur_file
 func get_stack_set() (map[string]int, []string, int) {
 	m := make(map[string]int)
 	list := make([]string, STACK_SIZE)
@@ -58,6 +61,7 @@ func get_stack_set() (map[string]int, []string, int) {
 	return m, list, list_size
 }
 
+// get_file_info returns information about the given file
 func get_file_info(file string) string {
 	rec := file_map[file]
 	be_str := strconv.Itoa(rec.sel_be)
@@ -65,6 +69,7 @@ func get_file_info(file string) string {
 	return file + ":" + be_str + ":" + en_str + "\n"
 }
 
+// session_save saves the current session
 func session_save() {
 	file_save_current()
 	file, _ := os.OpenFile(os.Getenv("HOME")+"/.tabby", os.O_CREATE|os.O_WRONLY, 0644)
@@ -89,6 +94,7 @@ func session_save() {
 	file.Close()
 }
 
+// session_open_and_read_file opens and reads the given file in the session
 func session_open_and_read_file(name string) bool {
 	read_ok, buf := open_file_read_to_buf(name, false)
 	if false == read_ok {
@@ -101,6 +107,7 @@ func session_open_and_read_file(name string) bool {
 	return false
 }
 
+// session_restore restores the previous session
 func session_restore() {
 	reader, file := take_reader_from_file(os.Getenv("HOME") + "/.tabby")
 	defer file.Close()
@@ -121,6 +128,7 @@ func session_restore() {
 	}
 }
 
+// take_reader_from_file gets a reader for the given file
 func take_reader_from_file(name string) (*bufio.Reader, *os.File) {
 	file, _ := os.OpenFile(name, os.O_CREATE|os.O_RDONLY, 0644)
 	if nil == file {
@@ -130,6 +138,7 @@ func take_reader_from_file(name string) (*bufio.Reader, *os.File) {
 	return bufio.NewReader(file), file
 }
 
+// next_string_from_reader reads the next string from the given reader and stores it in s
 func next_string_from_reader(reader *bufio.Reader, s *string) bool {
 	str, err := reader.ReadString('\n')
 	if nil != err {
