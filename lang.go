@@ -8,6 +8,8 @@ var lang_map map[string]*gtksourceview.SourceLanguage
 
 var prev_lang string = "default"
 
+// lang_refresh updates the language of the source buffer based on the file extension
+// of the current file being edited.
 func lang_refresh() {
 	ext := lang_get_extension(cur_file)
 	lang, found := lang_map[ext]
@@ -22,6 +24,7 @@ func lang_refresh() {
 	source_buf.SetLanguage(lang)
 }
 
+// lang_get_extension returns the file extension from a given filename.
 func lang_get_extension(name string) string {
 	for y := len(name) - 1; y >= 0; y-- {
 		if ('.' == name[y]) || ('/' == name[y]) {
@@ -31,6 +34,8 @@ func lang_get_extension(name string) string {
 	return ""
 }
 
+// init_lang initializes the language mapping based on known file extensions to 
+// their corresponding source language.
 func init_lang() {
 	lang_man := gtksourceview.SourceLanguageManagerGetDefault()
 	lang_map = make(map[string]*gtksourceview.SourceLanguage)
