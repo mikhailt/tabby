@@ -1,22 +1,4 @@
-package main
-
-import (
-	"syscall"
-	"unsafe"
-	"github.com/mattn/go-gtk/gdk"
-	"github.com/mattn/go-gtk/gtk"
-)
-
-var name_by_wd map[int32]string
-var wd_by_name map[string]int32
-
-var inotify_fd int
-var event_size int
-
-var epoll_fd int
-
-const NEVENTS int = 1024
-
+// Initializes inotify subsystem.
 func init_inotify() {
 	var err error
 
@@ -25,24 +7,30 @@ func init_inotify() {
 	var event syscall.InotifyEvent
 	event_size = int(unsafe.Sizeof(event))
 	inotify_fd, _ = syscall.InotifyInit()
+
 	if -1 == inotify_fd {
 		bump_message("InotifyInit failed, file changes outside of tabby " +
 			"will remain unnoticed")
 		return
 	}
+
 	epoll_fd, err = syscall.EpollCreate(1)
+
 	if -1 == epoll_fd {
 		tabby_log("init_inotify: " + err.Error())
 	}
+
 	var epoll_event syscall.EpollEvent
 	epoll_event.Events = syscall.EPOLLIN
 	syscall.EpollCtl(epoll_fd, syscall.EPOLL_CTL_ADD, inotify_fd, &epoll_event)
 	go inotify_observe()
 }
 
+// Adds a file/directory to be watched by inotify.
 func inotify_add_watch(name string) {
 	wd, err := syscall.InotifyAddWatch(inotify_fd, name,
 		syscall.IN_MODIFY|syscall.IN_DELETE_SELF|syscall.IN_MOVE_SELF)
+
 	if -1 == wd {
 		if err == syscall.ENOENT {
 			// Dirty hack.
@@ -56,12 +44,14 @@ func inotify_add_watch(name string) {
 	wd_by_name[name] = int32(wd)
 }
 
+// Removes a file/directory from inotify watch list.
 func inotify_rm_watch(name string) {
 	wd, found := wd_by_name[name]
 	if false == found {
 		return
 	}
 	retval, _ /*err*/ := syscall.InotifyRmWatch(inotify_fd, uint32(wd))
+
 	if -1 == retval {
 		//println("tabby: InotifyRmWatch failed, errno = ", err)
 		return
@@ -70,6 +60,7 @@ func inotify_rm_watch(name string) {
 	delete(wd_by_name, name)
 }
 
+// Observes events received from inotify. Deals with watched files and directories.
 func inotify_observe() {
 	buf := make([]byte, event_size*NEVENTS)
 	for {
@@ -80,6 +71,7 @@ func inotify_observe() {
 		gdk.ThreadsEnter()
 		file_save_current()
 		reload := inotify_dialog(collect)
+
 		for name, _ := range collect {
 			rec, rec_found := file_map[name]
 			if false == rec_found {
@@ -103,12 +95,14 @@ func inotify_observe() {
 			}
 		}
 		file_tree_store()
+
 		// So as to renew current TextBuffer it is required to switch to cur_file.
 		file_switch_to(cur_file)
 		gdk.ThreadsLeave()
 	}
 }
 
+// Collects inotify events.
 func inotify_observe_collect(buf []byte) map[string]int {
 	epoll_buf := make([]syscall.EpollEvent, 1)
 	collect := make(map[string]int)
@@ -132,6 +126,7 @@ func inotify_observe_collect(buf []byte) map[string]int {
 	return collect
 }
 
+// Shows a dialog window, either to reload files or keep them as is.
 // Returns true in case of reloading files, and false in case of keeping as is.
 func inotify_dialog(s map[string]int) bool {
 	if nil == accel_group {
