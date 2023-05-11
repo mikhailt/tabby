@@ -14,13 +14,14 @@ type SearchView struct {
 	window *gtk.ScrolledWindow
 }
 
+// Initializes the SearchView instance
 func (v *SearchView) Init() {
 	v.store = gtk.NewTreeStore(gtk.TYPE_STRING)
 	v.view = file_tree.NewSearchTree()
 	v.view.ModifyFontEasy("Regular 8")
 	v.model = v.store.ToTreeModel()
 	v.view.SetModel(v.model)
-	v.view.AppendColumn(gtk.NewTreeViewColumnWithAttributes("", 
+	v.view.AppendColumn(gtk.NewTreeViewColumnWithAttributes("",
 		gtk.NewCellRendererText(), "text", 0))
 	v.view.SetHeadersVisible(false)
 	v.view.Connect("cursor-changed", func() {v.Select()}, nil)
@@ -30,6 +31,7 @@ func (v *SearchView) Init() {
 	v.window.SetVisible(opt.show_search)
 }
 
+// Selects the file cursor points to and applies previous search pattern
 func (v *SearchView) Select() {
 	file := tree_view_get_selected_path(v.view, v.model, 0, false)
 	if !file_opened(file) {
@@ -43,12 +45,14 @@ func (v *SearchView) Select() {
 	}
 }
 
+// Sets the cursor to a specified position
 func (v *SearchView) SetCursor(pos int) {
 	v.cursor = pos
 	ppath := gtk.NewTreePathFromString(strconv.Itoa(pos))
 	v.view.SetCursor(ppath, nil, false)
 }
 
+// Adds a file to the tree
 func (v *SearchView) AddFile(file string) {
 	var iter gtk.TreeIter
 	v.store.Append(&iter, nil)
@@ -56,6 +60,7 @@ func (v *SearchView) AddFile(file string) {
 	v.size++
 }
 
+// Moves the cursor to the next result
 func (v *SearchView) NextResult() {
 	if 0 == v.size {
 		return
@@ -67,6 +72,7 @@ func (v *SearchView) NextResult() {
 	v.SetCursor(v.cursor)
 }
 
+// Moves the cursor to the previous result
 func (v *SearchView) PrevResult() {
 	if 0 == v.size {
 		return
@@ -78,6 +84,7 @@ func (v *SearchView) PrevResult() {
 	v.SetCursor(v.cursor)
 }
 
+// Prepares for a new search
 func (v *SearchView) PrepareToSearch() {
 	v.size = 0
 	v.cursor = -1
