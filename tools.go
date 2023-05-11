@@ -9,6 +9,7 @@ import (
 	"github.com/mattn/go-gtk/gtk"
 )
 
+// Add missing comment for gofmt_all()
 func gofmt_all() {
 	for file, _ := range file_map {
 		gofmt(file)
@@ -16,6 +17,7 @@ func gofmt_all() {
 	file_tree_store()
 }
 
+// Add missing comment for gofmt()
 func gofmt(file string) {
 	rec, _ := file_map[file]
 	var buf []byte
@@ -58,6 +60,7 @@ func gofmt(file string) {
 	}
 }
 
+// Add missing comment for get_output()
 func get_output(args []string, input []byte) (std []byte, error []byte, e error) {
 	inpr, inpw, err := os.Pipe()
 	if err != nil {
