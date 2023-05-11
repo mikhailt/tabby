@@ -1,3 +1,4 @@
+// Package main provides functions for find and replace functionality using go-gtk library.
 package main
 
 import (
@@ -7,11 +8,14 @@ import (
 	"strconv"
 )
 
+// fnr_cb handles the find and replace dialog.
 func fnr_cb() {
 	fnr_dialog()
 }
 
+// fnr_dialog displays the find and replace dialog and handles user input.
 func fnr_dialog() {
+	// Initialize variables.
 	var fnr_cnt int = 0
 	var scope_be, scope_en gtk.TextIter
 	if MAX_SEL_LEN < len(source_selection()) {
@@ -26,6 +30,7 @@ func fnr_dialog() {
 	var global_map map[string]int
 	var insert_set bool = false
 
+	// Create dialog and buttons.
 	dialog := gtk.NewDialog()
 	dialog.SetTitle("Find and Replace")
 	dialog.AddButton("_Find Next", gtk.RESPONSE_OK)
@@ -34,43 +39,44 @@ func fnr_dialog() {
 	dialog.AddButton("_Close", gtk.RESPONSE_CLOSE)
 	dialog.AddAccelGroup(accel_group)
 
+	// Create find and replace entry fields.
 	entry := find_entry_with_history()
 	replacement := find_entry_with_history()
 
+	// Create global checkbox.
 	global_button := gtk.NewCheckButtonWithLabel("Global")
 	global_button.SetVisible(true)
 	global_button.SetActive(prev_global)
 
+	// Add widgets to dialog.
 	vbox := dialog.GetVBox()
 	vbox.Add(entry)
 	vbox.Add(replacement)
 	vbox.Add(global_button)
 
+	// Get find, replace, replace all, and close buttons from dialog.
 	find_next_button := dialog.GetWidgetForResponse(int(gtk.RESPONSE_OK))
 	replace_button := dialog.GetWidgetForResponse(int(gtk.RESPONSE_YES))
 	replace_all_button := dialog.GetWidgetForResponse(int(gtk.RESPONSE_APPLY))
 	close_button := dialog.GetWidgetForResponse(int(gtk.RESPONSE_CLOSE))
 
+	// Connect callback functions to buttons.
 	find_next_button.Connect("clicked", func() {
 		fnr_pre_cb(global_button, &insert_set)
 		if !fnr_find_next(entry.GetActiveText(), prev_global, &map_filled, &global_map) {
 			fnr_close_and_report(dialog, fnr_cnt)
 		}
-	},
-		nil)
-	find_next_button.AddAccelerator("clicked", accel_group, gdk.KEY_Return,
-		0, gtk.ACCEL_VISIBLE)
+	}, nil)
+	find_next_button.AddAccelerator("clicked", accel_group, gdk.KEY_Return, 0, gtk.ACCEL_VISIBLE)
 
 	replace_button.Connect("clicked", func() {
 		fnr_pre_cb(global_button, &insert_set)
-		done, next_found := fnr_replace(entry.GetActiveText(), replacement.GetActiveText(),
-			prev_global, &map_filled, &global_map)
+		done, next_found := fnr_replace(entry.GetActiveText(), replacement.GetActiveText(), prev_global, &map_filled, &global_map)
 		fnr_cnt += done
 		if !next_found {
 			fnr_close_and_report(dialog, fnr_cnt)
 		}
-	},
-		nil)
+	}, nil)
 
 	replace_all_button.Connect("clicked", func() {
 		insert_set = false
@@ -81,14 +87,15 @@ func fnr_dialog() {
 			file_tree_store()
 		}
 		fnr_close_and_report(dialog, fnr_cnt)
-	},
-		nil)
+	}, nil)
 
 	close_button.Connect("clicked", func() { dialog.Destroy() }, nil)
 
+	// Run dialog.
 	dialog.Run()
 }
 
+// fnr_replace_all_local replaces all occurrences of a pattern with a replacement string in the current buffer.
 func fnr_replace_all_local(entry string, replacement string) int {
 	cnt := 0
 	var t bool = true
@@ -105,6 +112,7 @@ func fnr_replace_all_local(entry string, replacement string) int {
 	return cnt
 }
 
+// fnr_replace_all_global replaces all occurrences of a pattern with a replacement string in all files.
 func fnr_replace_all_global(entry, replacement string) int {
 	total_cnt := 0
 	lent := len(entry)
@@ -147,17 +155,20 @@ func fnr_replace_all_global(entry, replacement string) int {
 	return total_cnt
 }
 
+// fnr_pre_cb handles preparation steps before find and replace.
 func fnr_pre_cb(global_button *gtk.CheckButton, insert_set *bool) {
 	prev_global = global_button.GetActive()
 	fnr_refresh_scope(prev_global)
 	fnr_set_insert(insert_set)
 }
 
+// fnr_close_and_report handles clean up and status message after find and replace dialog.
 func fnr_close_and_report(dialog *gtk.Dialog, fnr_cnt int) {
 	dialog.Destroy()
 	bump_message(strconv.Itoa(fnr_cnt) + " replacements were done.")
 }
 
+// fnr_set_insert sets the insert mark for the current buffer.
 func fnr_set_insert(insert_set *bool) {
 	if false == *insert_set {
 		*insert_set = true
@@ -168,6 +179,7 @@ func fnr_set_insert(insert_set *bool) {
 	}
 }
 
+// fnr_refresh_scope refreshes the search scope for the current buffer.
 func fnr_refresh_scope(global bool) {
 	var be, en gtk.TextIter
 	if global {
@@ -178,6 +190,7 @@ func fnr_refresh_scope(global bool) {
 	}
 }
 
+// fnr_find_next searches for the next occurrence of a pattern in the current buffer or in all files.
 func fnr_find_next(pattern string, global bool, map_filled *bool, m *map[string]int) bool {
 	var be, en, scope_en gtk.TextIter
 	get_iter_at_mark_by_name("fnr_en", &scope_en)
@@ -216,6 +229,7 @@ func fnr_find_next(pattern string, global bool, map_filled *bool, m *map[string]
 	return false
 }
 
+// fnr_find_next_fill_global_map searches for all files containing a pattern and populates m with the files and their positions.
 func fnr_find_next_fill_global_map(pattern string, m *map[string]int, map_filled *bool) {
 	if *map_filled {
 		return
@@ -232,7 +246,7 @@ func fnr_find_next_fill_global_map(pattern string, m *map[string]int, map_filled
 	}
 }
 
-
+// fnr_replace replaces the current selection with a replacement string.
 // Returns (done, next_found)
 func fnr_replace(entry string, replacement string, global bool, map_filled *bool, global_map *map[string]int) (int, bool) {
 	if entry != source_selection() {
@@ -246,18 +260,4 @@ func fnr_replace(entry string, replacement string, global bool, map_filled *bool
 	return 1, fnr_find_next(entry, global, map_filled, global_map)
 }
 
-func pop_string_from_map(m *map[string]int) string {
-	if 0 == len(*m) {
-		return ""
-	}
-	for s, _ := range *m {
-	  delete(*m, s)
-		return s
-	}
-	return ""
-}
-
-func get_iter_at_mark_by_name(mark_name string, iter *gtk.TextIter) {
-	mark := source_buf.GetMark(mark_name)
-	source_buf.GetIterAtMark(iter, mark)
-}
+// pop_string_from_map removes and returns the
