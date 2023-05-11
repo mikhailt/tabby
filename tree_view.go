@@ -1,4 +1,4 @@
-package main
+// Package main provides a CLI application for file management.
 
 import (
 	"github.com/mattn/go-gtk/gtk"
@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// tree_view_select_cb handles file selection in the tree view.
 func tree_view_select_cb() {
 	sel_file := tree_view_get_selected_path(tree_view, tree_model, 0, true)
 	if "" == sel_file {
@@ -18,6 +19,7 @@ func tree_view_select_cb() {
 	file_switch_to(sel_file)
 }
 
+// tree_view_get_selected_path returns the path of the selected file in the tree view.
 func tree_view_get_selected_path(tree_view *gtk.TreeView, tree_model *gtk.TreeModel, col int, shift bool) string {
 	var path *gtk.TreePath
 	var column *gtk.TreeViewColumn
@@ -46,10 +48,9 @@ func tree_view_get_selected_path(tree_view *gtk.TreeView, tree_model *gtk.TreeMo
 	return ans
 }
 
-// Sets cur_iter pointing to tree_store node corresponding to current file.
-// Requires properly set cur_file. As a side effect it also assigns correct 
-// capitalization for first letters of strings kept in nodes according to @mark
-// which denotes if current file is active or not.
+// tree_view_set_cur_iter sets cur_iter pointing to the tree_store node corresponding to the current file.
+// It requires properly set cur_file. As a side effect, it also assigns the correct capitalization for 
+// the first letters of strings kept in nodes according to @mark which denotes if the current file is active or not.
 func tree_view_set_cur_iter(mark bool) {
 	if "" == cur_file {
 		return
@@ -65,9 +66,9 @@ func tree_view_set_cur_iter(mark bool) {
 		node_path := gval_string[1:]
 		if pos := slashed_prefix(cur_file_suffix, node_path); pos > 0 {
 			if mark {
-				tree_store.Set(&cur_iter, strings.ToUpper(string(icon)) + node_path)
+				tree_store.Set(&cur_iter, strings.ToUpper(string(icon))+node_path)
 			} else {
-				tree_store.Set(&cur_iter, strings.ToLower(string(icon)) + node_path)
+				tree_store.Set(&cur_iter, strings.ToLower(string(icon))+node_path)
 			}
 			if pos == len(cur_file_suffix) {
 				break
