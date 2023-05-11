@@ -1,3 +1,4 @@
+// Package main provides a command-line interface for file management.
 package main
 
 import (
@@ -6,6 +7,7 @@ import (
 	"strings"
 )
 
+// Called when a tree view is selected.
 func tree_view_select_cb() {
 	sel_file := tree_view_get_selected_path(tree_view, tree_model, 0, true)
 	if "" == sel_file {
@@ -18,6 +20,7 @@ func tree_view_select_cb() {
 	file_switch_to(sel_file)
 }
 
+// Returns the path of the selected node in a tree view.
 func tree_view_get_selected_path(tree_view *gtk.TreeView, tree_model *gtk.TreeModel, col int, shift bool) string {
 	var path *gtk.TreePath
 	var column *gtk.TreeViewColumn
