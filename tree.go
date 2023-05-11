@@ -1,9 +1,11 @@
+// Package main implements a file tree structure using go-gtk library.
 package main
 
 import (
 	"github.com/mattn/go-gtk/gtk"
 )
 
+// FileTreeNode represents a node of the file tree.
 type FileTreeNode struct {
 	name    string
 	parent  *FileTreeNode
@@ -12,6 +14,7 @@ type FileTreeNode struct {
 	rec     *FileRecord
 }
 
+// NewFileTreeNode creates and returns a new file tree node with the given record.
 func NewFileTreeNode(rec *FileRecord) *FileTreeNode {
 	res := new(FileTreeNode)
 	res.parent = nil
@@ -21,12 +24,15 @@ func NewFileTreeNode(rec *FileRecord) *FileTreeNode {
 	return res
 }
 
+// file_tree_root is the root node of the file tree.
 var file_tree_root FileTreeNode
 
+// name_is_dir returns true if the name represents a directory, false otherwise.
 func name_is_dir(name string) bool {
 	return ('/' == name[len(name)-1])
 }
 
+// slashed_prefix returns the length of the common prefix of a and b strings ending with a slash.
 func slashed_prefix(a string, b string) int {
 	la := len(a)
 	lb := len(b)
@@ -51,8 +57,8 @@ func slashed_prefix(a string, b string) int {
 	return last_slash
 }
 
-// In case pos == 0 node means last smaller than this node;
-// pos > 0 means that found node with common slashed prefix with name.
+// file_tree_find_among_children finds a child of the given root node with a name similar to the given name.
+// It returns the found node, the position of the name in the found node's name, and the previous node of the found node.
 func file_tree_find_among_children(root *FileTreeNode, name string) (node *FileTreeNode, position int, prev *FileTreeNode) {
 	var pos int
 	var cur_child, prev_child *FileTreeNode
@@ -75,10 +81,13 @@ func file_tree_find_among_children(root *FileTreeNode, name string) (node *FileT
 	return last_smaller_node, 0, prev_child
 }
 
+// file_tree_insert inserts a new file with the given name and record in the file tree.
 func file_tree_insert(name string, rec *FileRecord) {
 	file_tree_insert_rec(&file_tree_root, name, rec)
 }
 
+// file_tree_insert_rec is a recursive helper function for file_tree_insert.
+// It inserts a new file with the given name and record in the given root node.
 func file_tree_insert_rec(root *FileTreeNode, name string, rec *FileRecord) {
 	cur_child, pos, prev_child := file_tree_find_among_children(root, name)
 	if nil == cur_child {
@@ -122,8 +131,8 @@ func file_tree_insert_rec(root *FileTreeNode, name string, rec *FileRecord) {
 	file_tree_insert_rec(replacement, name[pos:], rec)
 }
 
-// Dumps root subtree to tree_store at iter. Flag is false for dumping files and
-// true for directories.
+// file_tree_store_rec recursively dumps root subtree to tree_store.
+// Flag is false for dumping files and true for directories.
 func file_tree_store_rec(root *FileTreeNode, iter *gtk.TreeIter, flag bool) {
 	var child_iter gtk.TreeIter
 	var icon byte
@@ -148,6 +157,7 @@ func file_tree_store_rec(root *FileTreeNode, iter *gtk.TreeIter, flag bool) {
 	}
 }
 
+// file_tree_store updates the tree_view widget with the contents of the file tree.
 func file_tree_store() {
 	tree_store.Clear()
 	file_tree_store_rec(&file_tree_root, nil, false)
@@ -156,6 +166,7 @@ func file_tree_store() {
 	tree_view_set_cur_iter(true)
 }
 
+// file_tree_remove removes a file with the given name from the file tree.
 func file_tree_remove(root *FileTreeNode, name string, merge_flag bool) {
 	cur_child, pos, prev_child := file_tree_find_among_children(root, name)
 	name_len := len(name)
@@ -192,6 +203,7 @@ func file_tree_remove(root *FileTreeNode, name string, merge_flag bool) {
 	bump_message("file_tree_remove: unexpected case: name = " + name)
 }
 
+// file_tree_remove_node removes a given node from its parent's children list.
 func file_tree_remove_node(cur *FileTreeNode, prev *FileTreeNode) {
 	if nil != prev {
 		prev.brother = cur.brother
@@ -200,6 +212,7 @@ func file_tree_remove_node(cur *FileTreeNode, prev *FileTreeNode) {
 	}
 }
 
+// file_tree_merge_parent_and_child merges a parent and its only child in the file tree.
 func file_tree_merge_parent_and_child(child *FileTreeNode) {
 	parent := child.parent
 	if &file_tree_root == parent {
