@@ -1,3 +1,4 @@
+// Package main is the entry point of the application.
 package main
 
 type FileRecord struct {
@@ -10,11 +11,14 @@ type FileRecord struct {
 
 var file_map map[string]*FileRecord
 
+// file_opened returns true if a file with the given name is already open.
 func file_opened(name string) bool {
 	_, found := file_map[name]
 	return found
 }
 
+// delete_file_record removes the record of the file with the given name from the file_map.
+// If the file tree node is present, it removes the node from the tree.
 func delete_file_record(name string) {
 	_, found := file_map[name]
 	if false == found {
@@ -25,6 +29,9 @@ func delete_file_record(name string) {
 	delete(file_map, name)
 }
 
+// add_file_record adds a new record to the file_map with the given name and buffer.
+// If bump_flag is true and the file is already open, it displays a message and returns false.
+// It returns true if the file is successfully added to the file_map.
 func add_file_record(name string, buf []byte, bump_flag bool) bool {
 	_, found := file_map[name]
 	if found {
