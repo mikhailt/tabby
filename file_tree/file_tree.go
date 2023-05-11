@@ -1,5 +1,6 @@
 package file_tree
 
+// tabby_renderer is a function that sets the cell renderer properties based on the value in the model
 /*
 #include <gtk/gtk.h>
 #include <stdlib.h>
@@ -36,7 +37,10 @@ void tabby_renderer(GtkTreeViewColumn *col,
   g_object_set(renderer, "text", str + 1, NULL);
   free(str);
 }
+*/
 
+// search_renderer is a function that sets the cell renderer properties to display the name of the file being searched
+/*
 void search_renderer(GtkTreeViewColumn *col,
                      GtkCellRenderer   *renderer,
                      GtkTreeModel      *model,
@@ -52,7 +56,10 @@ void search_renderer(GtkTreeViewColumn *col,
   g_object_set(renderer, "text", p + 1, NULL);
   free(str);
 }
+*/
 
+// create_tabby_file_tree is a function that creates and returns a new tabby file tree structure
+/*
 static void* create_tabby_file_tree() {
   GtkTreeViewColumn   *col;
   GtkCellRenderer     *renderer;
@@ -67,7 +74,10 @@ static void* create_tabby_file_tree() {
                                           NULL);
   return view;
 }
+*/
 
+// create_tabby_search_tree is a function that creates and returns a new tabby search tree structure
+/*
 static void* create_tabby_search_tree() {
   GtkTreeViewColumn   *col;
   GtkCellRenderer     *renderer;
@@ -83,15 +93,14 @@ static void* create_tabby_search_tree() {
   return view;
 }
 */
-// #cgo pkg-config: gtk+-2.0
-import "C"
-import "github.com/mattn/go-gtk/gtk"
 
+// NewFileTree is a function that creates and returns a new file tree widget
 func NewFileTree() *gtk.TreeView {
 	return &gtk.TreeView{gtk.Container{
 		*gtk.WidgetFromNative(C.create_tabby_file_tree())}}
 }
 
+// NewSearchTree is a function that creates and returns a new search tree widget
 func NewSearchTree() *gtk.TreeView {
 	return &gtk.TreeView{gtk.Container{
 		*gtk.WidgetFromNative(C.create_tabby_search_tree())}}
