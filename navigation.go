@@ -1,28 +1,9 @@
-package main
+// Initializes the navigation interface
+func init_navigation() {
+	accel_group = gtk.NewAccelGroup()
+}
 
-import (
-	"github.com/mattn/go-gtk/gtk"
-	//	"github.com/mattn/go-gtk/gdk"
-	"runtime"
-)
-
-const STACK_SIZE = 64
-const MAX_SEL_LEN = 128
-
-var selection_flag bool
-var prev_selection string
-var search_history []string
-
-var file_stack [STACK_SIZE]string
-var file_stack_top = 0
-var file_stack_base = 0
-var file_stack_max = 0
-
-var prev_global bool = true
-var prev_pattern string = ""
-
-var accel_group *gtk.AccelGroup = nil
-
+// Creates a combo box entry for searching with history
 func find_entry_with_history() *gtk.ComboBoxEntry {
 	entry := gtk.NewComboBoxEntryNewText()
 	entry.SetVisible(true)
@@ -37,6 +18,7 @@ func find_entry_with_history() *gtk.ComboBoxEntry {
 	return entry
 }
 
+// Retrieves the text from the source buffer
 func get_source() string {
 	var be, en gtk.TextIter
 	source_buf.GetStartIter(&be)
@@ -44,6 +26,7 @@ func get_source() string {
 	return source_buf.GetText(&be, &en, true)
 }
 
+// Saves the current file and its state
 func file_save_current() {
 	var be, en gtk.TextIter
 	rec, found := file_map[cur_file]
@@ -104,6 +87,7 @@ func file_switch_to(name string) {
 	lang_refresh()
 }
 
+// Pushes a file onto the file stack
 func file_stack_push(name string) {
 	if name == file_stack_at_top() {
 		return
@@ -118,6 +102,7 @@ func file_stack_push(name string) {
 	}
 }
 
+// Pops a file from the file stack
 func file_stack_pop() string {
 	for {
 		if file_stack_base == file_stack_top {
@@ -132,20 +117,73 @@ func file_stack_pop() string {
 	return ""
 }
 
-func stack_next(a *int) {
-	*a++
-	if STACK_SIZE == *a {
-		*a = 0
+// Updates the "insert" and "selection_bound" marks and scrolls to them
+func move_focus_and_selection(be *gtk.TextIter, en *gtk.TextIter) {
+	source_buf.MoveMarkByName("insert", be)
+	source_buf.MoveMarkByName("selection_bound", en)
+	mark := source_buf.GetMark("insert")
+	source_view.ScrollToMark(mark, 0, true, 1, 0.5)
+}
+
+// Scrolls the tree view to the current iterator
+func tree_view_scroll_to_cur_iter() {
+	if "" == cur_file {
+		return
+	}
+	//if false == tree_store.IterIsValid(&cur_iter) {
+	//	return
+	//}
+	path := tree_model.GetPath(&cur_iter)
+	tree_view.ScrollToCell(path, nil, true, 0.5, 0)
+}
+
+// Retrieves the selected text from the source buffer
+func source_selection() string {
+	var be, en gtk.TextIter
+	source_buf.GetSelectionBounds(&be, &en)
+	return source_buf.GetSlice(&be, &en, false)
+}
+
+// Initializes the navigation interface
+func next_file_cb() {
+	if file_stack_top == file_stack_max {
+		return
+	}
+	cur := file_stack_top
+	for stack_next(&cur); ; stack_next(&cur) {
+		if file_opened(file_stack[cur]) {
+			file_save_current()
+			file_switch_to(file_stack[cur])
+			file_stack_top = cur
+			return
+		}
+		if cur == file_stack_max {
+			break
+		}
 	}
 }
 
-func stack_prev(a *int) {
-	*a--
-	if -1 == *a {
-		*a = STACK_SIZE - 1
+// Switches to the previous file
+func prev_file_cb() {
+	shift_flag := file_stack_top == file_stack_max
+	file_save_current()
+	if shift_flag {
+		stack_prev(&file_stack_max)
 	}
+	// Popping out cur_file pushed in file_save_current. 
+	// Wrong in case of "" is cur_file !!!
+	file_stack_pop()
+	file_switch_to(file_stack_pop())
 }
 
+// Retrieves the file at the top of the stack
+func file_stack_at_top() string {
+	t := file_stack_top
+	stack_prev(&t)
+	return file_stack[t]
+}
+
+// Initializes the accelerator group
 func mark_set_cb() {
 	var cur gtk.TextIter
 	var be, en gtk.TextIter
@@ -177,14 +215,7 @@ func mark_set_cb() {
 	}
 }
 
-func find_next_instance(start, be, en *gtk.TextIter, pattern string) bool {
-	if start.ForwardSearch(pattern, 0, be, en, nil) {
-		return true
-	}
-	source_buf.GetStartIter(be)
-	return be.ForwardSearch(pattern, 0, be, en, nil)
-}
-
+// Finds the next instance of the selected text
 func next_instance_cb() {
 	var be, en gtk.TextIter
 	source_buf.GetSelectionBounds(&be, &en)
@@ -197,14 +228,7 @@ func next_instance_cb() {
 	move_focus_and_selection(&be, &en)
 }
 
-func find_prev_instance(start, be, en *gtk.TextIter, pattern string) bool {
-	if start.BackwardSearch(pattern, 0, be, en, nil) {
-		return true
-	}
-	source_buf.GetEndIter(be)
-	return be.BackwardSearch(pattern, 0, be, en, nil)
-}
-
+// Finds the previous instance of the selected text
 func prev_instance_cb() {
 	var be, en gtk.TextIter
 	source_buf.GetSelectionBounds(&be, &en)
@@ -217,66 +241,61 @@ func prev_instance_cb() {
 	move_focus_and_selection(&be, &en)
 }
 
-func move_focus_and_selection(be *gtk.TextIter, en *gtk.TextIter) {
-	source_buf.MoveMarkByName("insert", be)
-	source_buf.MoveMarkByName("selection_bound", en)
-	mark := source_buf.GetMark("insert")
-	source_view.ScrollToMark(mark, 0, true, 1, 0.5)
-}
-
-func tree_view_scroll_to_cur_iter() {
-	if "" == cur_file {
-		return
+// Finds the next instance of the search pattern
+func find_next_instance(start, be, en *gtk.TextIter, pattern string) bool {
+	if start.ForwardSearch(pattern, 0, be, en, nil) {
+		return true
 	}
-	//if false == tree_store.IterIsValid(&cur_iter) {
-	//	return
-	//}
-	path := tree_model.GetPath(&cur_iter)
-	tree_view.ScrollToCell(path, nil, true, 0.5, 0)
+	source_buf.GetStartIter(be)
+	return be.ForwardSearch(pattern, 0, be, en, nil)
 }
 
-func source_selection() string {
-	var be, en gtk.TextIter
-	source_buf.GetSelectionBounds(&be, &en)
-	return source_buf.GetSlice(&be, &en, false)
-}
-
-func next_file_cb() {
-	if file_stack_top == file_stack_max {
-		return
+// Finds the previous instance of the search pattern
+func find_prev_instance(start, be, en *gtk.TextIter, pattern string) bool {
+	if start.BackwardSearch(pattern, 0, be, en, nil) {
+		return true
 	}
-	cur := file_stack_top
-	for stack_next(&cur); ; stack_next(&cur) {
-		if file_opened(file_stack[cur]) {
-			file_save_current()
-			file_switch_to(file_stack[cur])
-			file_stack_top = cur
-			return
-		}
-		if cur == file_stack_max {
-			break
-		}
+	source_buf.GetEndIter(be)
+	return be.BackwardSearch(pattern, 0, be, en, nil)
+}
+
+// Initializes the accelerator group
+func lang_refresh() {
+	// TODO
+}
+
+// Initializes the accelerator group
+func stack_next(a *int) {
+	*a++
+	if STACK_SIZE == *a {
+		*a = 0
 	}
 }
 
-func prev_file_cb() {
-	shift_flag := file_stack_top == file_stack_max
-	file_save_current()
-	if shift_flag {
-		stack_prev(&file_stack_max)
+// Initializes the accelerator group
+func stack_prev(a *int) {
+	*a--
+	if -1 == *a {
+		*a = STACK_SIZE - 1
 	}
-	// Popping out cur_file pushed in file_save_current. 
-	// Wrong in case of "" is cur_file !!!
-	file_stack_pop()
-	file_switch_to(file_stack_pop())
 }
 
-func file_stack_at_top() string {
-	t := file_stack_top
-	stack_prev(&t)
-	return file_stack[t]
+// Initializes the accelerator group
+func refresh_title() {
+	title := cur_file
+	if source_buf.GetModified() {
+		title += "*"
+	}
+	gtk_win.SetTitle(title)
 }
 
-func init_navigation() {
-	accel_group = gtk.NewAccelGroup()
+// Initializes the accelerator group
+func file_opened(name string) bool {
+	_, ok := file_map[name]
+	return ok
+}
+
+// Initializes the accelerator group
+func tree_view_set_cur_iter(valid bool) {
+	// TODO
 }
