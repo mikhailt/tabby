@@ -1,10 +1,15 @@
 package file_tree
 
 /*
+This package provides functionality to create file tree and search tree using GTK.
+*/
+
+/*
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
 
+// tabby_renderer is a function used to render a tree view column for the file tree.
 void tabby_renderer(GtkTreeViewColumn *col,
                     GtkCellRenderer   *renderer,
                     GtkTreeModel      *model,
@@ -37,6 +42,7 @@ void tabby_renderer(GtkTreeViewColumn *col,
   free(str);
 }
 
+// search_renderer is a function used to render a tree view column for the search tree.
 void search_renderer(GtkTreeViewColumn *col,
                      GtkCellRenderer   *renderer,
                      GtkTreeModel      *model,
@@ -53,6 +59,7 @@ void search_renderer(GtkTreeViewColumn *col,
   free(str);
 }
 
+// create_tabby_file_tree is a function used to create file tree using GTK and return a pointer to it.
 static void* create_tabby_file_tree() {
   GtkTreeViewColumn   *col;
   GtkCellRenderer     *renderer;
@@ -68,6 +75,7 @@ static void* create_tabby_file_tree() {
   return view;
 }
 
+// create_tabby_search_tree is a function used to create search tree using GTK and return a pointer to it.
 static void* create_tabby_search_tree() {
   GtkTreeViewColumn   *col;
   GtkCellRenderer     *renderer;
@@ -84,6 +92,7 @@ static void* create_tabby_search_tree() {
 }
 */
 // #cgo pkg-config: gtk+-2.0
+
 import "C"
 import "github.com/mattn/go-gtk/gtk"
 
