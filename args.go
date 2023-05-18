@@ -1,3 +1,4 @@
+// Package main implements a tabbed text editor for Linux and Windows.
 package main
 
 import (
@@ -10,17 +11,20 @@ import (
 	"runtime"
 )
 
+// Global variables
 var listener net.Listener
 var tabby_args []string
 var pfocus_line *int
 var pstandalone *bool
 
+// Open all files given as arguments.
 func open_files_from_args() {
 	for _, s := range tabby_args {
 		open_file_from_args(prefixed_path(s), *pfocus_line)
 	}
 }
 
+// Handle incoming requests to open files from another instance of tabby.
 func tabby_server() {
 	var focus_line int
 	buf := make([]byte, 1024)
@@ -78,8 +82,9 @@ func tabby_server() {
 	}
 }
 
+// Check if another instance of tabby is already running and send arguments to it,
+// or start a new instance of tabby.
 // Returns true if start of real tabby instance required and false o/w.
-// In case of false sends arguments to tabby server.
 func provide_tabby_server(cnt int) bool {
 	if cnt > 3 {
 		return true
@@ -118,6 +123,7 @@ func provide_tabby_server(cnt int) bool {
 	return true
 }
 
+// Parse command-line arguments.
 // Returns true/false whether new instance of tabby editor have to be spawned.
 func init_args() bool {
 	pfocus_line = flag.Int("f", 1, "Focus line")
@@ -128,6 +134,7 @@ func init_args() bool {
 	return provide_tabby_server(0)
 }
 
+// Pack command-line arguments to send over socket to another tabby instance.
 func pack_tabby_args() string {
 	res := strconv.Itoa(*pfocus_line) + "\n"
 	for _, s := range tabby_args {
@@ -137,6 +144,7 @@ func pack_tabby_args() string {
 	return res
 }
 
+// Simplify file path.
 func simplified_path(file string) string {
 	res := file
 	for {
@@ -159,6 +167,7 @@ func simplified_path(file string) string {
 	return res
 }
 
+// Add prefix to relative file names to make them absolute.
 func prefixed_path(file string) string {
 	if '/' != file[0] {
 		// Relative file name.
@@ -172,6 +181,8 @@ func prefixed_path(file string) string {
 	return file
 }
 
+// Open file from command-line arguments.
+// Returns true if file was opened successfully and false o/w.
 func open_file_from_args(file string, focus_line int) bool {
 	split_file := strings.SplitN(file, ":", 2)
 	if len(split_file) >= 2 {
@@ -199,4 +210,12 @@ func open_file_from_args(file string, focus_line int) bool {
 		return false
 	}
 	return true
+}
+
+// Main function.
+func main() {
+	if init_args() {
+		init_gui()
+	}
+	gtk.Main()
 }
