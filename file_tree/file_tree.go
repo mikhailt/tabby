@@ -4,12 +4,13 @@ package file_tree
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
+*/
 
-void tabby_renderer(GtkTreeViewColumn *col,
-                    GtkCellRenderer   *renderer,
-                    GtkTreeModel      *model,
-                    GtkTreeIter       *iter,
-                    gpointer           user_data) {
+//tabby_renderer function renders the text and background color for a tree view column
+//based on the first character of the string
+//It takes GtkTreeViewColumn, GtkCellRenderer, GtkTreeModel, GtkTreeIter and a pointer as arguments
+//It returns nothing
+func tabby_renderer(col *C.GtkTreeViewColumn, renderer *C.GtkCellRenderer, model *C.GtkTreeModel, iter *C.GtkTreeIter, user_data C.gpointer) {
   gchar* str;
   unsigned char c;
 
@@ -37,11 +38,10 @@ void tabby_renderer(GtkTreeViewColumn *col,
   free(str);
 }
 
-void search_renderer(GtkTreeViewColumn *col,
-                     GtkCellRenderer   *renderer,
-                     GtkTreeModel      *model,
-                     GtkTreeIter       *iter,
-                     gpointer           user_data) {
+//search_renderer function renders the text for a search tree view column
+//It takes GtkTreeViewColumn, GtkCellRenderer, GtkTreeModel, GtkTreeIter and a pointer as arguments
+//It returns nothing
+func search_renderer(col *C.GtkTreeViewColumn, renderer *C.GtkCellRenderer, model *C.GtkTreeModel, iter *C.GtkTreeIter, user_data C.gpointer) {
   gchar* str;
   gchar* p;
 
@@ -53,7 +53,10 @@ void search_renderer(GtkTreeViewColumn *col,
   free(str);
 }
 
-static void* create_tabby_file_tree() {
+//create_tabby_file_tree function creates a file tree view widget with a single column
+//It takes no arguments
+//It returns a void pointer to the widget
+func create_tabby_file_tree() C.voidptr {
   GtkTreeViewColumn   *col;
   GtkCellRenderer     *renderer;
   GtkWidget           *view;
@@ -68,7 +71,10 @@ static void* create_tabby_file_tree() {
   return view;
 }
 
-static void* create_tabby_search_tree() {
+//create_tabby_search_tree function creates a search tree view widget with a single column
+//It takes no arguments
+//It returns a void pointer to the widget
+func create_tabby_search_tree() C.voidptr {
   GtkTreeViewColumn   *col;
   GtkCellRenderer     *renderer;
   GtkWidget           *view;
@@ -82,16 +88,23 @@ static void* create_tabby_search_tree() {
                                           NULL);
   return view;
 }
-*/
+
+//import "C" statement imports C code
+//It returns nothing
 // #cgo pkg-config: gtk+-2.0
 import "C"
-import "github.com/mattn/go-gtk/gtk"
 
+//NewFileTree function creates and returns a new file tree widget
+//It takes no arguments
+//It returns a pointer to the widget
 func NewFileTree() *gtk.TreeView {
 	return &gtk.TreeView{gtk.Container{
 		*gtk.WidgetFromNative(C.create_tabby_file_tree())}}
 }
 
+//NewSearchTree function creates and returns a new search tree widget
+//It takes no arguments
+//It returns a pointer to the widget
 func NewSearchTree() *gtk.TreeView {
 	return &gtk.TreeView{gtk.Container{
 		*gtk.WidgetFromNative(C.create_tabby_search_tree())}}
