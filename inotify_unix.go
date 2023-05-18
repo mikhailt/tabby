@@ -1,8 +1,10 @@
+// Package main provides the entry point to the program.
 package main
 
 import (
 	"syscall"
 	"unsafe"
+
 	"github.com/mattn/go-gtk/gdk"
 	"github.com/mattn/go-gtk/gtk"
 )
@@ -17,6 +19,7 @@ var epoll_fd int
 
 const NEVENTS int = 1024
 
+// init_inotify initializes the inotify feature for file monitoring.
 func init_inotify() {
 	var err error
 
@@ -26,7 +29,7 @@ func init_inotify() {
 	event_size = int(unsafe.Sizeof(event))
 	inotify_fd, _ = syscall.InotifyInit()
 	if -1 == inotify_fd {
-		bump_message("InotifyInit failed, file changes outside of tabby " +
+		bump_message("InotifyInit failed, file changes outside of tabby "+
 			"will remain unnoticed")
 		return
 	}
@@ -40,6 +43,7 @@ func init_inotify() {
 	go inotify_observe()
 }
 
+// inotify_add_watch adds the specified file to the watch list for inotify.
 func inotify_add_watch(name string) {
 	wd, err := syscall.InotifyAddWatch(inotify_fd, name,
 		syscall.IN_MODIFY|syscall.IN_DELETE_SELF|syscall.IN_MOVE_SELF)
@@ -48,14 +52,15 @@ func inotify_add_watch(name string) {
 			// Dirty hack.
 			return
 		}
-		tabby_log("InotifyAddWatch failed, changes of file " + name +
-			" outside of tabby will remain unnoticed, errno = " + err.Error())
+		tabby_log("InotifyAddWatch failed, changes of file "+name+
+			" outside of tabby will remain unnoticed, errno = "+err.Error())
 		return
 	}
 	name_by_wd[int32(wd)] = name
 	wd_by_name[name] = int32(wd)
 }
 
+// inotify_rm_watch removes the specified file from the watch list for inotify.
 func inotify_rm_watch(name string) {
 	wd, found := wd_by_name[name]
 	if false == found {
@@ -70,6 +75,7 @@ func inotify_rm_watch(name string) {
 	delete(wd_by_name, name)
 }
 
+// inotify_observe observes changes to the watched files using inotify.
 func inotify_observe() {
 	buf := make([]byte, event_size*NEVENTS)
 	for {
@@ -109,6 +115,7 @@ func inotify_observe() {
 	}
 }
 
+// inotify_observe_collect collects the changes to the watched files using inotify.
 func inotify_observe_collect(buf []byte) map[string]int {
 	epoll_buf := make([]syscall.EpollEvent, 1)
 	collect := make(map[string]int)
@@ -132,6 +139,7 @@ func inotify_observe_collect(buf []byte) map[string]int {
 	return collect
 }
 
+// inotify_dialog displays a dialog box for inotify notifications.
 // Returns true in case of reloading files, and false in case of keeping as is.
 func inotify_dialog(s map[string]int) bool {
 	if nil == accel_group {
