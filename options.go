@@ -1,3 +1,4 @@
+// Package main is the main package of the program.
 package main
 
 import (
@@ -6,6 +7,7 @@ import (
 	"strconv"
 )
 
+// Options is a struct that holds all the options for the program.
 type Options struct {
 	show_error, show_search, space_not_tab          bool
 	ohp_position, ihp_position, vvp_position        int
@@ -14,6 +16,7 @@ type Options struct {
 	tabsize                                         int
 }
 
+// new_options is a function that initializes the options struct with default values.
 func new_options() (o Options) {
 	o.show_search = true
 	o.show_error = true
@@ -27,15 +30,19 @@ func new_options() (o Options) {
 	return
 }
 
+// atoi is a function that converts a string to an integer.
 func atoi(s string) (i int) {
 	i, _ = strconv.Atoi(s)
 	return
 }
 
+// load_options is a function that loads the options from a file.
 func load_options() {
+	// Get the reader and the file.
 	reader, file := take_reader_from_file(os.Getenv("HOME") + "/.tabbyoptions")
 	defer file.Close()
 	var str string
+	// Loop through the lines of the file.
 	for next_string_from_reader(reader, &str) {
 		args := strings.Split(compact_space(str), "\t")
 		switch args[0] {
@@ -62,6 +69,7 @@ func load_options() {
 	}
 }
 
+// save_options is a function that saves the options to a file.
 func save_options() {
 	file, _ := os.OpenFile(os.Getenv("HOME")+"/.tabbyoptions", os.O_CREATE|os.O_WRONLY, 0644)
 	if nil == file {
@@ -83,6 +91,7 @@ func save_options() {
 	file.Close()
 }
 
+// compact_space is a function that removes extra spaces and tabs from a string.
 func compact_space(s string) string {
 	s = strings.TrimSpace(s)
 	n := replace_space(s)
@@ -93,14 +102,17 @@ func compact_space(s string) string {
 	return s
 }
 
+// replace_space is a function that replaces extra spaces and tabs in a string.
 func replace_space(s string) string {
 	return strings.Replace(strings.Replace(strings.Replace(s, "  ", " ", -1),
 		"\t ", "\t", -1),
 		" \t", "\t", -1)
 }
 
+// opt is the options struct.
 var opt Options = new_options()
 
+// window_event_cb is a function that handles window events.
 func window_event_cb() {
 	main_window.GetSize(&opt.window_width, &opt.window_height)
 	main_window.GetPosition(&opt.window_x, &opt.window_y)
@@ -109,18 +121,22 @@ func window_event_cb() {
 	options_set_tabsize(opt.tabsize)
 }
 
+// ohp_cb is a function that handles the position of the horizontal scroll bar.
 func ohp_cb(pos int) {
 	opt.ohp_position = pos
 }
 
+// ihp_cb is a function that handles the position of the horizontal scroll bar.
 func ihp_cb(pos int) {
 	opt.ihp_position = pos
 }
 
+// vvp_cb is a function that handles the position of the vertical scroll bar.
 func vvp_cb(pos int) {
 	opt.vvp_position = pos
 }
 
+// options_set_tabsize is a function that sets the tab size for the source view.
 func options_set_tabsize(s int) {
 	opt.tabsize = s
 	source_view.SetIndentWidth(s)
