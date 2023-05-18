@@ -10,11 +10,13 @@ type FileRecord struct {
 
 var file_map map[string]*FileRecord
 
+// file_opened checks if a file is already open
 func file_opened(name string) bool {
 	_, found := file_map[name]
 	return found
 }
 
+// delete_file_record deletes a file record for a given file name
 func delete_file_record(name string) {
 	_, found := file_map[name]
 	if false == found {
@@ -25,6 +27,7 @@ func delete_file_record(name string) {
 	delete(file_map, name)
 }
 
+// add_file_record adds a file record for a given file name and its contents
 func add_file_record(name string, buf []byte, bump_flag bool) bool {
 	_, found := file_map[name]
 	if found {

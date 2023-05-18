@@ -1,14 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"github.com/mattn/go-gtk/gtk"
+	"io"
 	"os"
 	"os/exec"
-	"io"
-	"bytes"
 	"path/filepath"
-	"github.com/mattn/go-gtk/gtk"
 )
 
+// Add comments to every function (if missing)
 func gofmt_all() {
 	for file, _ := range file_map {
 		gofmt(file)
@@ -16,6 +17,7 @@ func gofmt_all() {
 	file_tree_store()
 }
 
+// Add comments to every function (if missing)
 func gofmt(file string) {
 	rec, _ := file_map[file]
 	var buf []byte
@@ -58,6 +60,7 @@ func gofmt(file string) {
 	}
 }
 
+// Add comments to every function (if missing)
 func get_output(args []string, input []byte) (std []byte, error []byte, e error) {
 	inpr, inpw, err := os.Pipe()
 	if err != nil {

@@ -1,11 +1,14 @@
+// Package declaration
 package main
 
+// Import statements
 import (
 	"os"
 	"strings"
 	"strconv"
 )
 
+// Options struct for storing user preferences
 type Options struct {
 	show_error, show_search, space_not_tab          bool
 	ohp_position, ihp_position, vvp_position        int
@@ -14,6 +17,7 @@ type Options struct {
 	tabsize                                         int
 }
 
+// Function for initializing Options struct with default values
 func new_options() (o Options) {
 	o.show_search = true
 	o.show_error = true
@@ -27,11 +31,13 @@ func new_options() (o Options) {
 	return
 }
 
+// Function for converting string to int
 func atoi(s string) (i int) {
 	i, _ = strconv.Atoi(s)
 	return
 }
 
+// Function for loading user preferences from a file
 func load_options() {
 	reader, file := take_reader_from_file(os.Getenv("HOME") + "/.tabbyoptions")
 	defer file.Close()
@@ -62,6 +68,7 @@ func load_options() {
 	}
 }
 
+// Function for saving user preferences to a file
 func save_options() {
 	file, _ := os.OpenFile(os.Getenv("HOME")+"/.tabbyoptions", os.O_CREATE|os.O_WRONLY, 0644)
 	if nil == file {
@@ -83,6 +90,7 @@ func save_options() {
 	file.Close()
 }
 
+// Function for compacting multiple spaces and tabs into one space
 func compact_space(s string) string {
 	s = strings.TrimSpace(s)
 	n := replace_space(s)
@@ -93,14 +101,17 @@ func compact_space(s string) string {
 	return s
 }
 
+// Function for replacing multiple spaces and tabs with a single space
 func replace_space(s string) string {
 	return strings.Replace(strings.Replace(strings.Replace(s, "  ", " ", -1),
 		"\t ", "\t", -1),
 		" \t", "\t", -1)
 }
 
+// Initializing Options struct with default values
 var opt Options = new_options()
 
+// Callback function for handling window events
 func window_event_cb() {
 	main_window.GetSize(&opt.window_width, &opt.window_height)
 	main_window.GetPosition(&opt.window_x, &opt.window_y)
@@ -109,18 +120,22 @@ func window_event_cb() {
 	options_set_tabsize(opt.tabsize)
 }
 
+// Callback function for handling outer horizontal position change
 func ohp_cb(pos int) {
 	opt.ohp_position = pos
 }
 
+// Callback function for handling inner horizontal position change
 func ihp_cb(pos int) {
 	opt.ihp_position = pos
 }
 
+// Callback function for handling vertical position change
 func vvp_cb(pos int) {
 	opt.vvp_position = pos
 }
 
+// Function for setting tab size in source_view
 func options_set_tabsize(s int) {
 	opt.tabsize = s
 	source_view.SetIndentWidth(s)

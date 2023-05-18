@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// tree_view_select_cb handles file selection in the tree view
 func tree_view_select_cb() {
 	sel_file := tree_view_get_selected_path(tree_view, tree_model, 0, true)
 	if "" == sel_file {
@@ -18,6 +19,7 @@ func tree_view_select_cb() {
 	file_switch_to(sel_file)
 }
 
+// tree_view_get_selected_path returns the path of the selected file or directory
 func tree_view_get_selected_path(tree_view *gtk.TreeView, tree_model *gtk.TreeModel, col int, shift bool) string {
 	var path *gtk.TreePath
 	var column *gtk.TreeViewColumn
@@ -46,10 +48,8 @@ func tree_view_get_selected_path(tree_view *gtk.TreeView, tree_model *gtk.TreeMo
 	return ans
 }
 
-// Sets cur_iter pointing to tree_store node corresponding to current file.
-// Requires properly set cur_file. As a side effect it also assigns correct 
-// capitalization for first letters of strings kept in nodes according to @mark
-// which denotes if current file is active or not.
+// tree_view_set_cur_iter sets the current iterator to the node corresponding to the current file
+// It also assigns correct capitalization for first letters of strings kept in nodes according to @mark
 func tree_view_set_cur_iter(mark bool) {
 	if "" == cur_file {
 		return
@@ -79,4 +79,23 @@ func tree_view_set_cur_iter(mark bool) {
 			tree_model.IterNext(&cur_iter)
 		}
 	}
+}
+
+// slashed_prefix returns the position of the first non-matching character in two strings
+func slashed_prefix(s1 string, s2 string) int {
+	for i, c1 := range s1 {
+		if i >= len(s2) || c1 != rune(s2[i]) {
+			return i
+		}
+	}
+	return -1
+}
+
+// name_is_dir returns true if the given path is a directory
+func name_is_dir(name string) bool {
+	info, err := os.Lstat(name)
+	if nil != err {
+		return false
+	}
+	return info.IsDir()
 }

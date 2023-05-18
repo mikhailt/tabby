@@ -1,22 +1,4 @@
-package main
-
-import (
-	"syscall"
-	"unsafe"
-	"github.com/mattn/go-gtk/gdk"
-	"github.com/mattn/go-gtk/gtk"
-)
-
-var name_by_wd map[int32]string
-var wd_by_name map[string]int32
-
-var inotify_fd int
-var event_size int
-
-var epoll_fd int
-
-const NEVENTS int = 1024
-
+// Initialization of inotify and epoll.
 func init_inotify() {
 	var err error
 
@@ -40,6 +22,7 @@ func init_inotify() {
 	go inotify_observe()
 }
 
+// Add watch for a specific file.
 func inotify_add_watch(name string) {
 	wd, err := syscall.InotifyAddWatch(inotify_fd, name,
 		syscall.IN_MODIFY|syscall.IN_DELETE_SELF|syscall.IN_MOVE_SELF)
@@ -56,6 +39,7 @@ func inotify_add_watch(name string) {
 	wd_by_name[name] = int32(wd)
 }
 
+// Remove watch for a specific file.
 func inotify_rm_watch(name string) {
 	wd, found := wd_by_name[name]
 	if false == found {
@@ -70,6 +54,7 @@ func inotify_rm_watch(name string) {
 	delete(wd_by_name, name)
 }
 
+// Observe the file system for changes.
 func inotify_observe() {
 	buf := make([]byte, event_size*NEVENTS)
 	for {
@@ -109,6 +94,7 @@ func inotify_observe() {
 	}
 }
 
+// Collects modifications of files and stores them in a map.
 func inotify_observe_collect(buf []byte) map[string]int {
 	epoll_buf := make([]syscall.EpollEvent, 1)
 	collect := make(map[string]int)
@@ -132,7 +118,8 @@ func inotify_observe_collect(buf []byte) map[string]int {
 	return collect
 }
 
-// Returns true in case of reloading files, and false in case of keeping as is.
+// Displays a dialog window with a list of modified files.
+// Returns true if files should be reloaded, and false otherwise.
 func inotify_dialog(s map[string]int) bool {
 	if nil == accel_group {
 		accel_group = gtk.NewAccelGroup()
