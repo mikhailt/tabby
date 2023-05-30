@@ -1,56 +1,55 @@
 package main
 
 import (
+	"bytes"
+	"github.com/mattn/go-gtk/gtk"
+	"io"
 	"os"
 	"os/exec"
-	"io"
-	"bytes"
 	"path/filepath"
-	"github.com/mattn/go-gtk/gtk"
 )
 
-func gofmt_all() {
-	for file, _ := range file_map {
+func gofmtAll() {
+	for file := range fileMap {
 		gofmt(file)
 	}
-	file_tree_store()
+	fileTreeStore()
 }
 
 func gofmt(file string) {
-	rec, _ := file_map[file]
+	rec := fileMap[file]
 	var buf []byte
-	if file == cur_file {
-		buf = []byte(get_source())
+	if file == curFile {
+		buf = []byte(getSource())
 	} else {
 		buf = rec.buf
 	}
-	bin := os.Getenv("GOBIN")
-	if bin != "" {
-		bin = filepath.Join(bin, "gofmt")
-	} else {
-		bin, _ = exec.LookPath("gofmt")
+	bin, err := getGofmtBin()
+	if err != nil {
+		tabbyLog(err.Error())
+		return
 	}
-	std, error, e := get_output([]string{bin}, buf)
+	std, err, e := getOutput([]string{bin}, buf)
 	if e != nil {
-		tabby_log(e.Error())
+		tabbyLog(e.Error())
 		return
 	}
-	if file == cur_file {
-		error_buf.SetText(string(error))
+	if file == curFile {
+		errorBuf.SetText(string(err))
 	} else {
-		rec.error = error
+		rec.error = err
 	}
-	if 0 != len(error) {
+	if len(err) != 0 {
 		return
 	}
-	if file == cur_file {
+	if file == curFile {
 		if string(buf) != string(std) {
-			var be, en gtk.TextIter
-			source_buf.GetSelectionBounds(&be, &en)
-			sel_be := be.GetOffset()
-			source_buf.SetText(string(std))
-			source_buf.GetIterAtOffset(&be, sel_be)
-			move_focus_and_selection(&be, &be)
+			be, en := gtk.TextIter{}, gtk.TextIter{}
+			sourceBuf.GetSelectionBounds(&be, &en)
+			selBeOffset := be.GetOffset()
+			sourceBuf.SetText(string(std))
+			sourceBuf.GetIterAtOffset(&be, selBeOffset)
+			moveFocusAndSelection(&be, &be)
 		}
 	} else if string(rec.buf) != string(std) {
 		rec.buf = std
@@ -58,7 +57,7 @@ func gofmt(file string) {
 	}
 }
 
-func get_output(args []string, input []byte) (std []byte, error []byte, e error) {
+func getOutput(args []string, input []byte) ([]byte, []byte, error) {
 	inpr, inpw, err := os.Pipe()
 	if err != nil {
 		return nil, nil, err
@@ -86,16 +85,30 @@ func get_output(args []string, input []byte) (std []byte, error []byte, e error)
 	stdw.Close()
 	errw.Close()
 
-	var b bytes.Buffer
-	io.Copy(&b, stdr)
-	std = b.Bytes()
-	b.Reset()
-	io.Copy(&b, errr)
-	error = b.Bytes()
+	var stdBuf, errBuf bytes.Buffer
+	io.Copy(&stdBuf, stdr)
+	std := stdBuf.Bytes()
+	stdBuf.Reset()
+	io.Copy(&errBuf, errr)
+	errBytes := errBuf.Bytes()
 
 	inpr.Close()
 	stdr.Close()
 	errr.Close()
 	pid.Wait()
-	return
+	return std, errBytes, nil
+}
+
+func getGofmtBin() (string, error) {
+	bin := os.Getenv("GOBIN")
+	if bin != "" {
+		bin = filepath.Join(bin, "gofmt")
+	} else {
+		var err error
+		bin, err = exec.LookPath("gofmt")
+		if err != nil {
+			return "", err
+		}
+	}
+	return bin, nil
 }

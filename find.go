@@ -6,8 +6,11 @@ import (
 	"strings"
 )
 
+var prev_pattern string
+var search_history []string
+var prev_global bool
+
 func find_global(pattern string, find_file bool) {
-	var pos int
 	if find_file {
 		prev_pattern = ""
 	} else {
@@ -16,16 +19,16 @@ func find_global(pattern string, find_file bool) {
 	search_view.store.Clear()
 	for name, rec := range file_map {
 		if find_file {
-			pos = strings.Index(name, pattern)
+			if strings.Contains(name, pattern) {
+				search_view.AddFile(name)
+			}
 		} else {
 			if name == cur_file {
-				// find_in_current_file does required work for cur_file.
 				continue
 			}
-			pos = strings.Index(string(rec.buf), pattern)
-		}
-		if -1 != pos {
-			search_view.AddFile(name)
+			if strings.Contains(string(rec.buf), pattern) {
+				search_view.AddFile(name)
+			}
 		}
 	}
 }
@@ -40,23 +43,23 @@ func find_file_cb() {
 
 func find_common(find_file bool) {
 	found_in_cur_file := false
-	dialog_ok, pattern, global, find_file := find_dialog(find_file)
-	if false == dialog_ok {
+	if dialog_ok, pattern, global, find_file := find_dialog(find_file); !dialog_ok {
 		return
-	}
-	if global {
-		search_view.PrepareToSearch()
-	}
-	if find_file {
-		find_global(pattern, true)
 	} else {
 		if global {
-			find_global(pattern, false)
+			search_view.PrepareToSearch()
 		}
-		found_in_cur_file = find_in_current_file(pattern, global)
-	}
-	if global && !found_in_cur_file {
-		search_view.SetCursor(0)
+		if find_file {
+			find_global(pattern, true)
+		} else {
+			if global {
+				find_global(pattern, false)
+			}
+			found_in_cur_file = find_in_current_file(pattern, global)
+		}
+		if global && !found_in_cur_file {
+			search_view.SetCursor(0)
+		}
 	}
 }
 
@@ -83,8 +86,7 @@ func find_dialog(find_file bool) (bool, string, bool, bool) {
 	dialog.AddButton("_Cancel", gtk.RESPONSE_CANCEL)
 	w := dialog.GetWidgetForResponse(int(gtk.RESPONSE_ACCEPT))
 	dialog.AddAccelGroup(accel_group)
-	w.AddAccelerator("clicked", accel_group, gdk.KEY_Return,
-		0, gtk.ACCEL_VISIBLE)
+	w.AddAccelerator("clicked", accel_group, gdk.KEY_Return, 0, gtk.ACCEL_VISIBLE)
 	entry := find_entry_with_history()
 	global_button := gtk.NewCheckButtonWithLabel("Global")
 	global_button.SetVisible(true)
@@ -98,15 +100,13 @@ func find_dialog(find_file bool) (bool, string, bool, bool) {
 	vbox.Add(file_button)
 	if gtk.RESPONSE_ACCEPT == dialog.Run() {
 		entry_text := entry.GetActiveText()
-		if nil == search_history {
-			search_history = make([]string, 1)
-			search_history[0] = entry_text
+		if search_history == nil {
+			search_history = []string{entry_text}
 		} else {
-			be := 0
-			if 10 <= len(search_history) {
-				be = 1
+			if len(search_history) >= 10 {
+				search_history = search_history[1:]
 			}
-			search_history = append(search_history[be:], entry_text)
+			search_history = append(search_history, entry_text)
 		}
 		prev_global = global_button.GetActive()
 		return true, entry_text, prev_global, file_button.GetActive()

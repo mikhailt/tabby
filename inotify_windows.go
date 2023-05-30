@@ -10,7 +10,7 @@ func inotify_observe() {
 }
 
 func inotify_observe_collect(buf []byte) map[string]int {
-	return make(map[string]int)
+	return map[string]int{}
 }
 
 func inotify_dialog(s map[string]int) bool {
