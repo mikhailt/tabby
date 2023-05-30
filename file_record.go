@@ -8,7 +8,7 @@ type FileRecord struct {
 	sel_en   int
 }
 
-var file_map map[string]*FileRecord
+var file_map = make(map[string]*FileRecord)
 
 func file_opened(name string) bool {
 	_, found := file_map[name]
@@ -16,8 +16,7 @@ func file_opened(name string) bool {
 }
 
 func delete_file_record(name string) {
-	_, found := file_map[name]
-	if false == found {
+	if _, found := file_map[name]; !found {
 		return
 	}
 	inotify_rm_watch(name)
@@ -26,17 +25,14 @@ func delete_file_record(name string) {
 }
 
 func add_file_record(name string, buf []byte, bump_flag bool) bool {
-	_, found := file_map[name]
-	if found {
+	if _, found := file_map[name]; found {
 		if bump_flag {
 			bump_message("File " + name + " is already open")
 		}
 		return false
 	}
-	rec := new(FileRecord)
+	rec := &FileRecord{buf: buf, modified: false}
 	file_map[name] = rec
-	rec.modified = false
-	rec.buf = buf
 	file_tree_insert(name, rec)
 	if file_is_saved(name) {
 		inotify_add_watch(name)
